@@ -1,16 +1,17 @@
 :root {
     --primary-color: #4a89d1;
-    --bg-color: #BAE6D5;
-    --sidebar-color: #2c3e50;
-    --text-color: #333;
-    --white: #ffffff;
+    --bg-color: #f5f5f5;
+    --sidebar-color: #475d73;
+    --text-color: #000000;
+    --sky-blue: #cbecf2;
     --danger: #CF5134;
     --warning: #B0A94C;
     --padding-main: 45px;
+    --white : #ffffff;
 
     --transition: 0.3s ease;
     --radius: 10px;
-    --font-family: 'Segoe UI', Tahoma, Verdana, sans-serif, Arial;
+    --font-family: 'Arial', Tahoma, Verdana, sans-serif;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -24,11 +25,10 @@ body {
 .app-contenedor {
     display: flex;
     min-height: 90.5svh;
-
 }
 
 header {
-    background-color: var(--white);
+    background-color: var(--sky-blue);
     padding: 1.5rem var(--padding-main);
     text-align: center;
 }
@@ -36,13 +36,12 @@ header {
 .app-aside {
     background-color: var(--sidebar-color);
     color: var(--white);
-    width: 200px;
+    width: 190px;
     padding: var(--padding-main);
 }
 
 .contenido {
     flex: 1;
-    padding: var(--padding-main);
 }
 
 .tarjeta {
@@ -55,10 +54,10 @@ header {
     justify-content: space-between;
     align-items: center;
     background: var(--white);
-    padding: 25px;
-    margin-bottom: 30px;
+    padding: 20px;
+    margin-bottom: 15px;
     border-radius: var(--radius);
-    box-shadow: 0 2px 5px rgba(0,0,0,1);
+    box-shadow: 0 3px 5px rgba(0,0,0,1);
     transition: var(--transition); /* Bonus */
 }
 
@@ -68,15 +67,15 @@ header {
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
-.alta .badge { background: #e74c3c; }
-.media .badge { background: #f39c12; }
-.baja .badge { background: #27ae60; }
+.alta .badge { background: #e41700; }
+.media .badge { background: #f89900; }
+.baja .badge { background: #18ac56; }
 
 .category { font-size: 0.85rem; color: #7f8c8d; }
 
 .badge {
-    padding: 5px 10px;
-    border-radius: 15px;
+    padding: 3px 5px;
+    border-radius: 20px;
     font-size: 0.75rem;
     color: white;
 }
@@ -87,7 +86,7 @@ li{
 
 
 /* Para los moviles */
-@media (max-width: 768px) {
+@media (max-width: 700px) {
     .app-container {
         flex-direction: column;
     }
