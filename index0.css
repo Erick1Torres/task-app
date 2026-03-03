@@ -1,0 +1,105 @@
+:root {
+    --primary-color: #4a89d1;
+    --bg-color: #BAE6D5;
+    --sidebar-color: #2c3e50;
+    --text-color: #333;
+    --white: #ffffff;
+    --danger: #CF5134;
+    --warning: #B0A94C;
+    --padding-main: 45px;
+
+    --transition: 0.3s ease;
+    --radius: 10px;
+    --font-family: 'Segoe UI', Tahoma, Verdana, sans-serif, Arial;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+.app-contenedor {
+    display: flex;
+    min-height: 90.5svh;
+
+}
+
+header {
+    background-color: var(--white);
+    padding: 1.5rem var(--padding-main);
+    text-align: center;
+}
+
+.app-aside {
+    background-color: var(--sidebar-color);
+    color: var(--white);
+    width: 200px;
+    padding: var(--padding-main);
+}
+
+.contenido {
+    flex: 1;
+    padding: var(--padding-main);
+}
+
+.tarjeta {
+    flex: 1;
+    padding: var(--padding-main);
+}
+
+.tarjeta-tareas {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--white);
+    padding: 25px;
+    margin-bottom: 30px;
+    border-radius: var(--radius);
+    box-shadow: 0 2px 5px rgba(0,0,0,1);
+    transition: var(--transition); /* Bonus */
+}
+
+/* Bonus hover */
+.tarjeta-tareas:hover {
+    transform: scale(1.02);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.alta .badge { background: #e74c3c; }
+.media .badge { background: #f39c12; }
+.baja .badge { background: #27ae60; }
+
+.category { font-size: 0.85rem; color: #7f8c8d; }
+
+.badge {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    color: white;
+}
+
+li{
+    margin-bottom: 10px;
+}
+
+
+/* Para los moviles */
+@media (max-width: 768px) {
+    .app-container {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100%;
+        padding: 10px;
+    }
+
+    .sidebar ul {
+        display: flex;
+        justify-content: center;
+        list-style: none;
+    }
+}
