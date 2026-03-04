@@ -1,104 +1,138 @@
+/* Definicion de las variables en el root
+   el root lo estoy utilizando para facilitar el matenimiento por si quiero cambiar el color o un espaciado 
+   se actualizara en todo el diseño automaticamente faciltitando y agilizando mas su mantenimiento*/
 :root {
-    --primary-color: #4a89d1;
-    --bg-color: #f5f5f5;
-    --sidebar-color: #475d73;
-    --text-color: #000000;
-    --sky-blue: #cbecf2;
-    --danger: #CF5134;
-    --warning: #B0A94C;
-    --padding-main: 45px;
-    --white : #ffffff;
-
-    --transition: 0.3s ease;
-    --radius: 10px;
-    --font-family: 'Arial', Tahoma, Verdana, sans-serif;
+  --color-bc: #f0f2f5;
+  --color-header: #282644;
+  --color-background: #d5f2cf;
+  --priority-high: #ef4444;
+  --priority-medium: #f59e0b;
+  --priority-low: #10b981;
+  --corners: 24px;
+  --font-main: 'Segoe UI', Tahoma, Verdana, sans-serif;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
+/* Aqui configuro el cuerpo para centralizar la app y usar el sistema de fuente en el root */
 body {
-    font-family: var(--font-family);
-    background-color: var(--bg-color);
-    color: var(--text-color);
+  background-color: var(--color-bc);
+  font-family: var(--font-main);
+  display: flex;
+  justify-content: center;
+  padding: 40px 0;
 }
-
-.app-contenedor {
-    display: flex;
-    min-height: 90.5svh;
+/* Le doy estilo al contenedor-nota un estilo tipo tarjeta*/
+.contenedor-background {
+  background: var(--color-background);
+  width: 95%;
+  max-width: 850px;
+  padding: var(--corners);
+  border-radius: var(--corners);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
 }
-
+/* Este es el encabezado tipo semantico de la app*/
 header {
-    background-color: var(--sky-blue);
-    padding: 1.5rem var(--padding-main);
-    text-align: center;
+  background: var(--color-header);
+  color: white;
+  text-align: center;
+  padding: 15px;
+  border-radius: var(--corners);
+  margin-bottom: var(--corners);
 }
 
-.app-aside {
-    background-color: var(--sidebar-color);
-    color: var(--white);
-    width: 190px;
-    padding: var(--padding-main);
+/* Maquetacion flexbox 
+    Esto divide la interfaz como una estructura de columnas */
+.layout-flex {
+  display: flex;
+  gap: var(--corners); /* Esto crea espacios uniformes entre la barra lateral y y la lista principal*/
 }
 
-.contenido {
-    flex: 1;
+/* La barra lateral contiene los filtros de categoria*/
+.barra-lateral {
+  flex: 1; /* lo que estoy haciendo aqui con el flex es ocupar 1 fraccion del espacio total del contenedor flex */
 }
 
-.tarjeta {
-    flex: 1;
-    padding: var(--padding-main);
+/* Contenedor de la lista*/
+.lista-tareas {
+  flex: 3; /* Aqui lo mismo que en el barra lateral pero con la diferencia que ocupo 3 osea el triple */
+  display: flex;
+  flex-direction: column; /* Apilado vertical*/
+  gap: 12px; /* Espacio interno entre tarjetas de tarea*/
 }
 
-.tarjeta-tareas {
+/* Estilo de la Tarea con Flex 
+    maqueto cada tarjeta para que el titulo, categoria y prioridad se alineen solos */
+.task {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  transition: transform 0.2s;
+  border-left: 5px solid #ccc;
+}
+ /* desplazo a la derecha para que es usuario visualise el feedback*/
+.task:hover { transform: translateX(5px); }
+
+/* Este es el control de proporciones dentro de la tarjeta de tareas*/
+.title { flex: 2; font-weight: bold; }
+.category { flex: 1; font-size: 0.9em; color: #666; }
+
+/* Doy diseño a las prioridades, un diseño tipo serrado (para mi llamado mejor tipo pildoras)*/
+.priority { 
+  padding: 5px 12px; 
+  border-radius: 20px; 
+  color: white; 
+  font-size: 0.8em;
+  text-align: center;
+}
+
+/* Colores de prioridad */
+.alta { border-left-color: var(--priority-high); }
+.alta .priority { background: var(--priority-high); }
+.media { border-left-color: var(--priority-medium); }
+.media .priority { background: var(--priority-medium); }
+.baja { border-left-color: var(--priority-low); }
+.baja .priority { background: var(--priority-low); }
+
+/* Estilo de navegacion*/
+aside ul { list-style: none; padding: 0; }
+aside li {
+  padding: 10px;
+  margin-bottom: 8px;
+  background: #ffffffcc;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: 0.3s;
+}
+
+/* Aqui le doy color como si estuviera en una categoria en este caso el color se pondra en categorias todas*/
+aside li.active { background: var(--color-header); color: white; }
+
+/* Medida para la adaptabilidad en los moviles 
+    Esto lo que hace es que cuando la medida es menor a 600px el diseño se adapte al cambio asiendolo tipo a solo una columna*/
+@media (max-width: 600px) {
+    /* esto es lo que hace pasar de sumnas a filas*/
+  .layout-flex {
+    flex-direction: column; 
+  }
+
+  /* Y esto hace cambiar de fila a columna para que los textos no se amontonen */
+  .task {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* Estoy hace que el menu lateral se convierta en horizontal*/
+  aside ul {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: var(--white);
-    padding: 20px;
-    margin-bottom: 15px;
-    border-radius: var(--radius);
-    box-shadow: 0 3px 5px rgba(0,0,0,1);
-    transition: var(--transition); /* Bonus */
-}
-
-/* Bonus hover */
-.tarjeta-tareas:hover {
-    transform: scale(1.02);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-}
-
-.alta .badge { background: #e41700; }
-.media .badge { background: #f89900; }
-.baja .badge { background: #18ac56; }
-
-.category { font-size: 0.85rem; color: #7f8c8d; }
-
-.badge {
-    padding: 3px 5px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    color: white;
-}
-
-li{
-    margin-bottom: 10px;
-}
-
-
-/* Para los moviles */
-@media (max-width: 700px) {
-    .app-container {
-        flex-direction: column;
-    }
-    
-    .sidebar {
-        width: 100%;
-        padding: 10px;
-    }
-
-    .sidebar ul {
-        display: flex;
-        justify-content: center;
-        list-style: none;
-    }
+    flex-wrap: wrap; /* Esto es lo que me permite que baje si no hay espacio*/
+    gap: 10px;
+  }
+  
+  /* el filto se expande para rellenar el ancho*/
+  aside li { flex: 1; 
+    text-align: center; }
 }

@@ -3,53 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>App Recordatorio</title>
+    <title>Gestor de Tareas Académico</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-    <header>
-        <h1>Gestor de Tareas</h1>
-    </header>
+    <div class="contenedor-background">
+        <header>
+            <h1>Gestor de Tareas</h1>
+        </header>
 
-    <div class="app-contenedor">
-        <aside class="app-aside">
-            <nav>
-                <ul>
-                    <li>Bases de datos</li>
-                    <li>Desarrollo de aplicaciones web</li>
-                    <li>Fol</li>
-                    <li>Lenguaje de marcas</li>
-                    <li>Fundamentos de hardware</li>
-                </ul>
-            </nav>
-        </aside>
+        <div class="layout-flex">
+            <aside class="barra-lateral">
+                <nav>
+                    <ul>
+                        <li class="filtro-all active">Todas</li>
+                        <li class="filtro-materia1">BBDD</li>
+                        <li class="filtro-materia2">FOL</li>
+                        <li class="filtro-materia3">Marcas</li>
+                    </ul>
+                </nav>
+            </aside>
 
-        <main class="contenido">
-            <section class="tarjeta">
-            <h2>Mis Tareas</h2>
+            <main class="lista-tareas">
+                <section class="task alta">
+                    <span class="title">Conexiones SQL</span>
+                    <span class="category">Bases de Datos</span>
+                    <span class="priority">Alta</span>
+                </section>
 
-            <div class="tarjeta-tareas alta">
-                <span class="title">Conexiones</span>
-                <span class="category">BBDD</span>
-                <span class="badge">Alta</span>
-            </div>
+                <section class="task media">
+                    <span class="title">Riesgos Laborales</span>
+                    <span class="category">FOL</span>
+                    <span class="priority">Media</span>
+                </section>
 
-            <div class="tarjeta-tareas media">
-                <span class="title">Tipos de Accidente</span>
-                <span class="category">Fol</span>
-                <span class="badge">Media</span>
-            </div>
-
-            <div class="tarjeta-tareas baja">
-                <span class="title">Ver video</span>
-                <span class="category">Lenguaje de marcas</span>
-                <span class="badge">Baja</span>
-            </div>
-
-        </section>
-        </main>
+                <section class="task baja">
+                    <span class="title">Maquetación CSS</span>
+                    <span class="category">Lenguaje Marcas</span>
+                    <span class="priority">Baja</span>
+                </section>
+            </main>
+        </div>
     </div>
-
 </body>
 </html>
