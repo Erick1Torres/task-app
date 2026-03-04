@@ -58,7 +58,49 @@ header {
   flex-direction: column; /* Apilado vertical*/
   gap: 12px; /* Espacio interno entre tarjetas de tarea*/
 }
+#task-form {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 25px;
+}
 
+#task-form input, 
+#task-form select, 
+#search-input {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-family: inherit;
+}
+
+#task-input {
+  flex-grow: 1; /* El campo de texto crece para ocupar espacio */
+}
+
+#search-input {
+  width: 100%;
+  margin-bottom: 20px;
+  box-sizing: border-box; /* Para que el padding no afecte al ancho total */
+  border: 2px solid #ffffffcc;
+}
+
+/* Botón de añadir tarea */
+#task-form button {
+  background: var(--color-header);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+#task-form button:hover {
+  filter: brightness(1.2);
+  transform: translateY(-2px);
+}
 /* Estilo de la Tarea con Flex 
     maqueto cada tarjeta para que el titulo, categoria y prioridad se alineen solos */
 .task {
@@ -107,6 +149,33 @@ aside li {
   transition: 0.3s;
 }
 
+.btn-eliminar {
+  background: #ff4d4d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-left: 10px;
+  transition: background 0.3s;
+        }
+
+.btn-eliminar:hover {
+  background: #cc0000;
+        }
+        /* Asegura que los elementos de la tarea se alineen bien con el nuevo botón */
+
+
+.task {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+        }
+
+
+
+
 /* Aqui le doy color como si estuviera en una categoria en este caso el color se pondra en categorias todas*/
 aside li.active { background: var(--color-header); color: white; }
 
@@ -118,6 +187,11 @@ aside li.active { background: var(--color-header); color: white; }
     flex-direction: column; 
   }
 
+  #task-form {
+    flex-direction: column;
+  }
+
+
   /* Y esto hace cambiar de fila a columna para que los textos no se amontonen */
   .task {
     align-items: flex-start;
@@ -125,7 +199,13 @@ aside li.active { background: var(--color-header); color: white; }
     gap: 8px;
   }
 
-  /* Estoy hace que el menu lateral se convierta en horizontal*/
+  .btn-eliminar {
+    margin-left: 0;
+    width: 100%;
+    margin-top: 5px;
+  }
+
+  /* Esto hace que el menu lateral se convierta en horizontal*/
   aside ul {
     display: flex;
     flex-wrap: wrap; /* Esto es lo que me permite que baje si no hay espacio*/

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestor de Tareas Académico</title>
     <link rel="stylesheet" href="styles.css">
-</head>
+    </head>
 <body>
 
     <div class="contenedor-background">
@@ -16,35 +16,40 @@
         <div class="layout-flex">
             <aside class="barra-lateral">
                 <nav>
+                    <h2>Categorías</h2>
                     <ul>
-                        <li class="filtro-all active">Todas</li>
-                        <li class="filtro-materia1">BBDD</li>
-                        <li class="filtro-materia2">FOL</li>
-                        <li class="filtro-materia3">Marcas</li>
+                        <li data-filter="all" class="filtro-all active">Todas</li>
+                        <li data-filter="trabajo" class="filtro-materia1">Trabajo</li>
+                        <li data-filter="casa" class="filtro-materia2">Casa</li>
+                        <li data-filter="estudios" class="filtro-materia3">Estudios</li>
                     </ul>
                 </nav>
             </aside>
 
             <main class="lista-tareas">
-                <section class="task alta">
-                    <span class="title">Conexiones SQL</span>
-                    <span class="category">Bases de Datos</span>
-                    <span class="priority">Alta</span>
-                </section>
+                <form id="task-form">
+    <input type="text" id="task-input" placeholder="Nombre de la tarea..." required>
+    <select id="task-category-select">
+        <option value="trabajo">Trabajo</option>
+        <option value="casa">Casa</option>
+        <option value="estudios">Estudios</option>
+    </select>
+    <select id="task-priority-select">
+        <option value="alta">Alta</option>
+        <option value="media">Media</option>
+        <option value="baja">Baja</option>
+    </select>
+    <button type="submit">Añadir</button>
+</form>
 
-                <section class="task media">
-                    <span class="title">Riesgos Laborales</span>
-                    <span class="category">FOL</span>
-                    <span class="priority">Media</span>
-                </section>
+<input type="text" id="search-input" placeholder="Filtrar por nombre...">
 
-                <section class="task baja">
-                    <span class="title">Maquetación CSS</span>
-                    <span class="category">Lenguaje Marcas</span>
-                    <span class="priority">Baja</span>
-                </section>
+                <div id="task-list">
+                    </div>
             </main>
         </div>
     </div>
+
+    <script src="app.js"></script>
 </body>
 </html>
