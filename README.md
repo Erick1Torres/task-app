@@ -168,6 +168,8 @@ Las etiquetas que utilizamos nes permiten organizar la interfaz de forma mas cla
 - main -> El contenido principal
 - selection -> Cada tarea
 
+------
+
 ### 2. Variables CSS
 reamos un archivo CSS llamdo 'styles.css' y lo vinculamos con el html colocando las siguentes etiquetas en el 'head'
 ```
@@ -194,6 +196,8 @@ Esto Permite:
 - mantener coherencia visual
 - facilitar cambios de diseño
 
+----
+
 ### 3. Maquetacion de Flexbox
 He utilizado el Flexbox para alinear los elementos de cada tarea de la sigiente manera
 ```
@@ -212,6 +216,9 @@ Esto me permite colocar en una misma línea:
 - título de la tarea
 - categoría
 - badge de prioridad
+
+----
+
 ### 4. Diseño responsive con Media Queries
 
 Para adaptar la aplicacion para moviles se implementa Media Queries de la siguente manera:
@@ -243,6 +250,9 @@ Esto permite que:
 - la barra lateral pase a la parte superior
 
 - las tareas se adapten a pantallas pequeñas
+
+----
+
 ### Bonus transiciones CSS
 Añadiremos un efecto de transición al pasar el cursor sobre las tarjetas de tareas. 
 ```
