@@ -257,7 +257,9 @@ box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 ```
 Esto crea una interacción visual más fluida en la interfaz.
 
-### 5. Publicación del proyecto en Vercel
+-----
+
+### 5. Publicación del proyecto en Vercel 
 
 El proyecto se publicó utilizando Vercel.
 
