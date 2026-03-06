@@ -26,3 +26,7 @@ https://task-app-two-lake.vercel.app/
 * **Vercel:** Hosting y despliegue continuo.
 
 ---
+
+## Autor
+
+Erick Cáceres.
