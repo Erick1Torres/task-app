@@ -3,49 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor de Tareas Académico</title>
-    <link rel="stylesheet" href="styles.css">
-    </head>
-<body>
+    <title>TaskFlow Pro - Tailwind</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Configuración de Tailwind para soportar modo oscuro por clase
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+</head>
+<body class="bg-slate-100 dark:bg-slate-900 transition-colors duration-300 font-sans min-h-screen p-4 md:p-10">
 
-    <div class="contenedor-background">
-        <header>
-            <h1>Gestor de Tareas</h1>
+    <div class="max-w-4xl mx-auto bg-white dark:bg-slate-800 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700">
+        
+        <header class="bg-indigo-600 dark:bg-indigo-900 p-6 flex justify-between items-center text-white">
+            <h1 class="text-2xl font-bold tracking-tight">TaskFlow Pro</h1>
+            <button id="theme-toggle" class="p-2 rounded-lg bg-indigo-500 dark:bg-indigo-800 hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                <span id="theme-icon">🌙</span>
+            </button>
         </header>
 
-        <div class="layout-flex">
-            <aside class="barra-lateral">
-                <nav>
-                    <h2>Categorías</h2>
-                    <ul>
-                        <li data-filter="all" class="filtro-all active">Todas</li>
-                        <li data-filter="trabajo" class="filtro-materia1">Trabajo</li>
-                        <li data-filter="casa" class="filtro-materia2">Casa</li>
-                        <li data-filter="estudios" class="filtro-materia3">Estudios</li>
-                    </ul>
-                </nav>
+        <div class="flex flex-col md:flex-row gap-6 p-6">
+            <aside class="w-full md:w-1/4">
+                <h2 class="text-slate-500 dark:text-slate-400 font-semibold uppercase text-xs mb-4">Categorías</h2>
+                <ul class="barra-lateral space-y-2">
+                    <li data-filter="all" class="active cursor-pointer p-3 rounded-xl bg-indigo-600 text-white font-medium transition-all">Todas</li>
+                    <li data-filter="trabajo" class="cursor-pointer p-3 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all">Trabajo</li>
+                    <li data-filter="casa" class="cursor-pointer p-3 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all">Casa</li>
+                    <li data-filter="estudios" class="cursor-pointer p-3 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all">Estudios</li>
+                </ul>
             </aside>
 
-            <main class="lista-tareas">
-                <form id="task-form">
-    <input type="text" id="task-input" placeholder="Nombre de la tarea..." required>
-    <select id="task-category-select">
-        <option value="trabajo">Trabajo</option>
-        <option value="casa">Casa</option>
-        <option value="estudios">Estudios</option>
-    </select>
-    <select id="task-priority-select">
-        <option value="alta">Alta</option>
-        <option value="media">Media</option>
-        <option value="baja">Baja</option>
-    </select>
-    <button type="submit">Añadir</button>
-</form>
+            <main class="flex-1 space-y-6">
+                <form id="task-form" class="flex flex-wrap gap-3">
+                    <input type="text" id="task-input" placeholder="Nueva tarea..." required 
+                           class="flex-1 min-w-[200px] p-3 rounded-xl border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all">
+                    
+                    <select id="task-category-select" class="p-3 rounded-xl border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-indigo-500">
+                        <option value="trabajo">Trabajo</option>
+                        <option value="casa">Casa</option>
+                        <option value="estudios">Estudios</option>
+                    </select>
 
-<input type="text" id="search-input" placeholder="Filtrar por nombre...">
+                    <select id="task-priority-select" class="p-3 rounded-xl border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-indigo-500">
+                        <option value="alta">Alta</option>
+                        <option value="media">Media</option>
+                        <option value="baja">Baja</option>
+                    </select>
 
-                <div id="task-list">
-                    </div>
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl transition-all hover:-translate-y-1 active:scale-95 shadow-lg shadow-indigo-200 dark:shadow-none">
+                        Añadir
+                    </button>
+                </form>
+
+                <div class="relative">
+                    <input type="text" id="search-input" placeholder="Buscar tarea..." 
+                           class="w-full p-3 pl-10 rounded-xl border-2 border-transparent bg-slate-100 dark:bg-slate-700 dark:text-white focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-800 transition-all outline-none">
+                    <span class="absolute left-3 top-3.5 opacity-40">🔍</span>
+                </div>
+
+                <div id="task-list" class="space-y-3"></div>
             </main>
         </div>
     </div>
