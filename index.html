@@ -3,66 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TaskFlow Pro - Tailwind</title>
+    <title>TaskFlow Pro | Contraste Total</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <script>
-        // Configuración de Tailwind para soportar modo oscuro por clase
-        tailwind.config = {
-            darkMode: 'class',
-        }
+        tailwind.config = { darkMode: 'class' }
     </script>
 </head>
-<body class="bg-slate-100 dark:bg-slate-900 transition-colors duration-300 font-sans min-h-screen p-4 md:p-10">
+<body class="bg-slate-50 dark:bg-slate-950 font-sans min-h-screen p-4 md:p-10 transition-colors duration-300 text-slate-900 dark:text-slate-100">
 
-    <div class="max-w-4xl mx-auto bg-white dark:bg-slate-800 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700">
+    <div class="max-w-5xl mx-auto bg-white dark:bg-slate-900 rounded-3xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-800">
         
         <header class="bg-indigo-600 dark:bg-indigo-900 p-6 flex justify-between items-center text-white">
-            <h1 class="text-2xl font-bold tracking-tight">TaskFlow Pro</h1>
-            <button id="theme-toggle" class="p-2 rounded-lg bg-indigo-500 dark:bg-indigo-800 hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                <span id="theme-icon">🌙</span>
+            <div class="flex items-center gap-3">
+                <i data-lucide="check-circle" class="w-8 h-8"></i>
+                <h1 class="text-xl font-bold tracking-tight text-white">TaskFlow Pro</h1>
+            </div>
+            
+            <button id="theme-toggle" class="p-2.5 rounded-xl bg-indigo-500/50 hover:bg-indigo-400 transition-all outline-none">
+                <i id="theme-icon" data-lucide="moon" class="w-5 h-5 text-white"></i>
             </button>
         </header>
 
-        <div class="flex flex-col md:flex-row gap-6 p-6">
-            <aside class="w-full md:w-1/4">
-                <h2 class="text-slate-500 dark:text-slate-400 font-semibold uppercase text-xs mb-4">Categorías</h2>
-                <ul class="barra-lateral space-y-2">
-                    <li data-filter="all" class="active cursor-pointer p-3 rounded-xl bg-indigo-600 text-white font-medium transition-all">Todas</li>
-                    <li data-filter="trabajo" class="cursor-pointer p-3 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all">Trabajo</li>
-                    <li data-filter="casa" class="cursor-pointer p-3 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all">Casa</li>
-                    <li data-filter="estudios" class="cursor-pointer p-3 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all">Estudios</li>
-                </ul>
+        <div class="flex flex-col md:flex-row">
+            <aside class="w-full md:w-64 bg-slate-50 dark:bg-slate-800/50 p-6 border-r border-slate-100 dark:border-slate-800">
+                <nav>
+                    <h2 class="text-slate-400 dark:text-slate-500 font-bold uppercase text-[10px] tracking-widest mb-6">Categorías</h2>
+                    <ul class="barra-lateral space-y-1">
+                        <li data-filter="all" tabindex="0" class="flex items-center gap-3 cursor-pointer p-3 rounded-xl bg-indigo-600 text-white font-semibold outline-none">
+                            <i data-lucide="layout-grid" class="w-4 h-4"></i> Todas
+                        </li>
+                        <li data-filter="trabajo" tabindex="0" class="flex items-center gap-3 cursor-pointer p-3 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 transition-all outline-none">
+                            <i data-lucide="briefcase" class="w-4 h-4 text-slate-400"></i> Trabajo
+                        </li>
+                        <li data-filter="casa" tabindex="0" class="flex items-center gap-3 cursor-pointer p-3 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 transition-all outline-none">
+                            <i data-lucide="home" class="w-4 h-4 text-slate-400"></i> Casa
+                        </li>
+                        <li data-filter="estudios" tabindex="0" class="flex items-center gap-3 cursor-pointer p-3 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 transition-all outline-none">
+                            <i data-lucide="book-open" class="w-4 h-4 text-slate-400"></i> Estudios
+                        </li>
+                    </ul>
+                </nav>
             </aside>
 
-            <main class="flex-1 space-y-6">
-                <form id="task-form" class="flex flex-wrap gap-3">
-                    <input type="text" id="task-input" placeholder="Nueva tarea..." required 
-                           class="flex-1 min-w-[200px] p-3 rounded-xl border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all">
-                    
-                    <select id="task-category-select" class="p-3 rounded-xl border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-indigo-500">
-                        <option value="trabajo">Trabajo</option>
-                        <option value="casa">Casa</option>
-                        <option value="estudios">Estudios</option>
-                    </select>
-
-                    <select id="task-priority-select" class="p-3 rounded-xl border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-indigo-500">
-                        <option value="alta">Alta</option>
-                        <option value="media">Media</option>
-                        <option value="baja">Baja</option>
-                    </select>
-
-                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl transition-all hover:-translate-y-1 active:scale-95 shadow-lg shadow-indigo-200 dark:shadow-none">
-                        Añadir
-                    </button>
+            <main class="flex-1 p-6 md:p-10 space-y-8 bg-white dark:bg-slate-900">
+                
+                <form id="task-form" class="flex flex-wrap gap-4 items-end">
+                    <div class="flex-1 min-w-[250px] space-y-2">
+                        <label class="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500 ml-1">Nueva Tarea</label>
+                        <input type="text" id="task-input" placeholder="¿Qué tienes pendiente?" required 
+                               class="w-full p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                    </div>
+                    <div class="flex gap-2">
+                        <select id="task-category-select" 
+                                class="p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                            <option value="trabajo">Trabajo</option>
+                            <option value="casa">Casa</option>
+                            <option value="estudios">Estudios</option>
+                        </select>
+                        <select id="task-priority-select" 
+                                class="p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                            <option value="baja">Baja</option>
+                            <option value="media" selected>Media</option>
+                            <option value="alta">Alta</option>
+                        </select>
+                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold p-4 rounded-2xl transition-all active:scale-95 flex items-center justify-center">
+                            <i data-lucide="plus" class="w-6 h-6"></i>
+                        </button>
+                    </div>
                 </form>
 
-                <div class="relative">
-                    <input type="text" id="search-input" placeholder="Buscar tarea..." 
-                           class="w-full p-3 pl-10 rounded-xl border-2 border-transparent bg-slate-100 dark:bg-slate-700 dark:text-white focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-800 transition-all outline-none">
-                    <span class="absolute left-3 top-3.5 opacity-40">🔍</span>
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500">
+                        <i data-lucide="search" class="w-5 h-5"></i>
+                    </div>
+                    <input type="text" id="search-input" placeholder="Buscar tareas..." 
+                           class="w-full p-4 pl-12 rounded-2xl bg-slate-100 dark:bg-slate-800 border-none text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
                 </div>
 
-                <div id="task-list" class="space-y-3"></div>
+                <div id="task-list" class="space-y-4"></div>
             </main>
         </div>
     </div>

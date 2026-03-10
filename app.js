@@ -1,120 +1,116 @@
-const taskForm = document.getElementById('task-form');
-const taskList = document.getElementById('task-list');
-const searchInput = document.getElementById('search-input');
-const filtros = document.querySelectorAll(".barra-lateral li");
-const themeToggle = document.getElementById('theme-toggle');
+let tasks = JSON.parse(localStorage.getItem('misTareas')) || [];
 
-// --- 1. Lógica de Modo Oscuro ---
-themeToggle.addEventListener('click', () => {
-    document.documentElement.classList.toggle('dark');
-    const isDark = document.documentElement.classList.contains('dark');
-    document.getElementById('theme-icon').textContent = isDark ? '☀️' : '🌙';
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
-});
-
-// Cargar preferencia de tema al recargar la página
-if (localStorage.getItem('theme') === 'dark') {
-    document.documentElement.classList.add('dark');
-    document.getElementById('theme-icon').textContent = '☀️';
+function saveAndRender() {
+    localStorage.setItem('misTareas', JSON.stringify(tasks));
+    renderTasks();
 }
 
-// --- 2. Lógica de Tareas (Almacenamiento) ---
-document.addEventListener('DOMContentLoaded', cargarTareas);
-
-function guardarTareas() {
-    const tareas = [];
-    document.querySelectorAll('.task').forEach(t => {
-        tareas.push({
-            titulo: t.querySelector('.task-title').textContent,
-            categoria: t.dataset.category,
-            prioridad: t.dataset.priority
-        });
-    });
-    localStorage.setItem('misTareas', JSON.stringify(tareas));
-}
-
-function cargarTareas() {
-    const tareasGuardadas = JSON.parse(localStorage.getItem('misTareas')) || [];
-    tareasGuardadas.forEach(t => crearElementoTarea(t.titulo, t.categoria, t.prioridad));
-}
-
-// --- 3. Creación de Interfaz con Tailwind ---
-function crearElementoTarea(titulo, categoria, prioridad) {
-    const newTask = document.createElement('section');
-    newTask.dataset.category = categoria;
-    newTask.dataset.priority = prioridad;
+function renderTasks() {
+    const activeFilterEl = document.querySelector('.barra-lateral li.bg-indigo-600');
+    const activeFilter = activeFilterEl ? activeFilterEl.dataset.filter : 'all';
+    const searchText = document.getElementById('search-input').value.toLowerCase();
+    const taskList = document.getElementById('task-list');
     
-    // Colores de borde según prioridad usando Tailwind
-    const borderColor = {
-        alta: 'border-l-red-500',
-        media: 'border-l-amber-500',
-        baja: 'border-l-emerald-500'
-    }[prioridad];
+    taskList.innerHTML = '';
 
-    // Clases de Tailwind para la tarjeta (Bonus: hover y transiciones)
-    newTask.className = `task flex items-center justify-between p-4 bg-white dark:bg-slate-700 rounded-xl shadow-sm border-l-4 ${borderColor} hover:translate-x-1 transition-all group`;
+    const priorityWeight = { alta: 1, media: 2, baja: 3 };
+    const filtered = tasks
+        .filter(t => (activeFilter === 'all' || t.category === activeFilter) && t.title.toLowerCase().includes(searchText))
+        .sort((a, b) => priorityWeight[a.priority] - priorityWeight[b.priority]);
 
-    newTask.innerHTML = `
-        <div class="flex flex-col">
-            <span class="task-title font-bold text-slate-800 dark:text-white">${titulo}</span>
-            <span class="text-xs font-medium uppercase tracking-wider text-slate-400">
-                ${categoria} • <span class="capitalize">${prioridad}</span>
-            </span>
+    filtered.forEach(task => {
+        const taskEl = createTaskElement(task);
+        taskList.appendChild(taskEl);
+    });
+
+    lucide.createIcons();
+}
+
+function createTaskElement(task) {
+    const borderColors = { 
+        alta: 'border-l-red-500', 
+        media: 'border-l-amber-500', 
+        baja: 'border-l-emerald-500' 
+    };
+    
+    const div = document.createElement('div');
+    // Se añaden clases text-slate-700 y dark:text-slate-200 para visibilidad total
+    div.className = `flex items-center justify-between p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 border-l-4 ${borderColors[task.priority]} group transition-all shadow-sm ${task.completed ? 'opacity-40 grayscale-[0.5]' : ''}`;
+    
+    div.innerHTML = `
+        <div class="flex items-center gap-4">
+            <input type="checkbox" ${task.completed ? 'checked' : ''} class="w-5 h-5 rounded cursor-pointer accent-indigo-600 border-slate-300">
+            <div>
+                <p class="font-bold text-slate-800 dark:text-white ${task.completed ? 'line-through text-slate-400' : ''}">${task.title}</p>
+                <span class="text-[10px] font-black uppercase tracking-widest text-indigo-500 dark:text-indigo-400">${task.category}</span>
+            </div>
         </div>
-        <button class="btn-eliminar opacity-0 group-hover:opacity-100 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-3 py-1.5 rounded-lg text-sm font-bold hover:bg-red-600 hover:text-white transition-all">
-            Eliminar
+        <button class="delete-btn opacity-0 group-hover:opacity-100 p-2 text-slate-400 hover:text-red-500 transition-all">
+            <i data-lucide="trash-2" class="w-5 h-5"></i>
         </button>
     `;
 
-    // Evento para eliminar
-    newTask.querySelector('.btn-eliminar').addEventListener('click', () => {
-        newTask.classList.add('scale-95', 'opacity-0');
-        setTimeout(() => {
-            newTask.remove();
-            guardarTareas();
-        }, 200);
-    });
+    div.querySelector('input').onchange = (e) => {
+        task.completed = e.target.checked;
+        saveAndRender();
+    };
 
-    taskList.appendChild(newTask);
+    div.querySelector('.delete-btn').onclick = () => {
+        div.animate([{ opacity: 1, scale: 1 }, { opacity: 0, scale: 0.9 }], { duration: 200 }).onfinish = () => {
+            tasks = tasks.filter(t => t.id !== task.id);
+            saveAndRender();
+        };
+    };
+
+    return div;
 }
 
-// --- 4. Eventos de Formulario y Filtros ---
-taskForm.addEventListener('submit', (e) => {
+// Formulario
+document.getElementById('task-form').onsubmit = (e) => {
     e.preventDefault();
-    const title = document.getElementById('task-input').value;
-    const category = document.getElementById('task-category-select').value;
-    const priority = document.getElementById('task-priority-select').value;
+    const input = document.getElementById('task-input');
+    tasks.push({
+        id: Date.now(),
+        title: input.value.trim(),
+        category: document.getElementById('task-category-select').value,
+        priority: document.getElementById('task-priority-select').value,
+        completed: false
+    });
+    input.value = '';
+    saveAndRender();
+};
 
-    crearElementoTarea(title, category, priority);
-    guardarTareas();
-    taskForm.reset();
+// Filtros
+document.querySelectorAll(".barra-lateral li").forEach(f => {
+    f.onclick = () => {
+        document.querySelectorAll(".barra-lateral li").forEach(btn => {
+            btn.className = "flex items-center gap-3 cursor-pointer p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 transition-all outline-none";
+        });
+        f.className = "flex items-center gap-3 cursor-pointer p-3 rounded-xl bg-indigo-600 text-white font-semibold shadow-md outline-none";
+        renderTasks();
+    };
 });
 
-filtros.forEach(filtro => {
-    filtro.addEventListener("click", () => {
-        const cat = filtro.getAttribute("data-filter");
-        
-        // Actualizar estilos visuales de los botones de filtro
-        filtros.forEach(btn => {
-            btn.className = "cursor-pointer p-3 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all";
-        });
-        filtro.className = "active cursor-pointer p-3 rounded-xl bg-indigo-600 text-white font-bold transition-all";
-        
-        // Filtrado lógico
-        document.querySelectorAll(".task").forEach(t => {
-            const matches = (cat === "all" || t.dataset.category === cat);
-            t.classList.toggle('hidden', !matches);
-            t.classList.toggle('flex', matches);
-        });
-    });
-});
+// Búsqueda
+document.getElementById('search-input').oninput = renderTasks;
 
-searchInput.addEventListener('input', (e) => {
-    const texto = e.target.value.toLowerCase();
-    document.querySelectorAll(".task").forEach(t => {
-        const titulo = t.querySelector('.task-title').textContent.toLowerCase();
-        const matches = titulo.includes(texto);
-        t.classList.toggle('hidden', !matches);
-        t.classList.toggle('flex', matches);
-    });
+// Lógica de Modo Oscuro Corregida
+document.getElementById('theme-toggle').onclick = () => {
+    const isDark = document.documentElement.classList.toggle('dark');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    
+    const icon = document.getElementById('theme-icon');
+    icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+    lucide.createIcons();
+};
+
+// Carga Inicial
+document.addEventListener('DOMContentLoaded', () => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.getElementById('theme-icon').setAttribute('data-lucide', 'sun');
+    }
+    lucide.createIcons();
+    renderTasks();
 });
