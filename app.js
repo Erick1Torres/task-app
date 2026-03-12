@@ -27,22 +27,29 @@ function renderTasks() {
 }
 
 function createTaskElement(task) {
-    const borderColors = { 
-        alta: 'border-l-red-500', 
-        media: 'border-l-amber-500', 
-        baja: 'border-l-emerald-500' 
+    // Diccionario de clases Tailwind para los colores de prioridad
+    const priorityClasses = {
+        alta: "border-l-red-500 bg-red-50/30 dark:bg-red-900/10 text-red-700 dark:text-red-400",
+        media: "border-l-amber-500 bg-amber-50/30 dark:bg-amber-900/10 text-amber-700 dark:text-amber-400",
+        baja: "border-l-emerald-500 bg-emerald-50/30 dark:bg-emerald-900/10 text-emerald-700 dark:text-emerald-400"
     };
-    
+
+    const pClass = priorityClasses[task.priority] || "border-l-slate-300 bg-slate-50";
     const div = document.createElement('div');
-    // Se añaden clases text-slate-700 y dark:text-slate-200 para visibilidad total
-    div.className = `flex items-center justify-between p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 border-l-4 ${borderColors[task.priority]} group transition-all shadow-sm ${task.completed ? 'opacity-40 grayscale-[0.5]' : ''}`;
+    
+    div.className = `flex items-center justify-between p-5 rounded-2xl border border-slate-100 dark:border-slate-700 border-l-4 shadow-sm transition-all group ${pClass} ${task.completed ? 'opacity-40 grayscale-[0.5]' : ''}`;
     
     div.innerHTML = `
         <div class="flex items-center gap-4">
             <input type="checkbox" ${task.completed ? 'checked' : ''} class="w-5 h-5 rounded cursor-pointer accent-indigo-600 border-slate-300">
             <div>
-                <p class="font-bold text-slate-800 dark:text-white ${task.completed ? 'line-through text-slate-400' : ''}">${task.title}</p>
-                <span class="text-[10px] font-black uppercase tracking-widest text-indigo-500 dark:text-indigo-400">${task.category}</span>
+                <p class="font-bold ${task.completed ? 'line-through opacity-50' : 'text-slate-800 dark:text-white'}">${task.title}</p>
+                <div class="flex items-center gap-2 mt-1">
+                    <span class="text-[10px] font-black uppercase tracking-widest opacity-60">${task.category}</span>
+                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-white/50 dark:bg-black/20 border border-current/10">
+                        ${task.priority}
+                    </span>
+                </div>
             </div>
         </div>
         <button class="delete-btn opacity-0 group-hover:opacity-100 p-2 text-slate-400 hover:text-red-500 transition-all">
@@ -94,11 +101,10 @@ document.querySelectorAll(".barra-lateral li").forEach(f => {
 // Búsqueda
 document.getElementById('search-input').oninput = renderTasks;
 
-// Lógica de Modo Oscuro Corregida
+// Lógica de Modo Oscuro
 document.getElementById('theme-toggle').onclick = () => {
     const isDark = document.documentElement.classList.toggle('dark');
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
-    
     const icon = document.getElementById('theme-icon');
     icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
     lucide.createIcons();
