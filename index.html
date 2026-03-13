@@ -52,9 +52,11 @@
                 <form id="task-form" class="flex flex-wrap gap-4 items-end" aria-label="Añadir nueva tarea">
                     <div class="flex-1 min-w-[250px] space-y-2">
                         <label for="task-input" class="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500 ml-1">Nueva Tarea</label>
-                        <input type="text" id="task-input" placeholder="¿Qué tienes pendiente?" required maxlength="200" autocomplete="off"
+                        <input type="text" id="task-input" placeholder="¿Qué tienes pendiente?" required autocomplete="off"
+                               maxlength="200" minlength="1"
                                class="w-full p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                               aria-describedby="task-input-hint">
+                               aria-describedby="task-input-hint task-input-error" aria-invalid="false">
+                        <span id="task-input-error" class="sr-only mt-1 text-sm text-red-600 dark:text-red-400" role="alert"></span>
                         <span id="task-input-hint" class="sr-only">Escribe el título de la tarea y pulsa Enter o el botón para añadirla</span>
                     </div>
                     <div class="flex gap-2">
@@ -93,6 +95,6 @@
         </div>
     </div>
 
-    <script type="module" src="js/main.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
