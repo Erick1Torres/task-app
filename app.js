@@ -15,6 +15,12 @@ const PRIORITY_MAP = {
 };
 
 // ============ MOTOR DE PERSONALIZACIÓN ============
+
+/**
+ * Aplica el color de identidad a la interfaz y actualiza el almacenamiento local.
+ * Genera estilos CSS dinámicos para elementos con colores de marca.
+ * @param {string} hex - El color en formato hexadecimal (ej. "#4f46e5").
+ */
 function applyThemeColor(hex) {
     userColor = hex;
     localStorage.setItem(STORAGE_KEYS.COLOR, hex);
@@ -27,25 +33,18 @@ function applyThemeColor(hex) {
     styleTag.innerHTML = `
         :root { --brand-primary: ${hex}; }
         #main-header, #add-btn, .active-filter { background-color: ${hex} !important; }
-        .focus-within\:ring-indigo-500:focus-within, .focus\:ring-indigo-500:focus { 
-            --tw-ring-color: ${hex} !important; 
-            border-color: ${hex} !important; 
-        }
         input:focus, select:focus { border-color: ${hex} !important; }
+        .checked\\:bg-\\[var\\(--brand-primary\\)\\]:checked { background-color: ${hex} !important; }
     `;
     document.head.appendChild(styleTag);
 }
 
 // ============ LÓGICA DE TAREAS ============
 
-/** * NUEVA: Configura límites visuales en los inputs 
+/**
+ * Filtra y renderiza la lista de tareas en el DOM basándose en la búsqueda y los filtros activos.
+ * Gestiona el estado vacío y la ordenación de las tareas.
  */
-function setupInputConstraints() {
-    const dateInput = document.getElementById('task-date-input');
-    const today = new Date().toISOString().split('T')[0];
-    dateInput.min = today; // Evita seleccionar fechas pasadas en el calendario
-}
-
 function renderTaskList() {
     const list = document.getElementById('task-list');
     const emptyState = document.getElementById('empty-state');
@@ -110,6 +109,11 @@ function renderTaskList() {
     lucide.createIcons();
 }
 
+/**
+ * Ajusta la visibilidad del icono de verificación en elementos inyectados dinámicamente.
+ * @param {HTMLElement} el - El elemento de la tarea recién creado.
+ * @returns {HTMLElement} El elemento procesado.
+ */
 function itemIconFix(el) {
     if (window.lucide) {
         const checkIcon = el.querySelector('input:checked + i');
@@ -118,54 +122,42 @@ function itemIconFix(el) {
     return el;
 }
 
+/**
+ * Sincroniza el array de tareas actual con el LocalStorage del navegador.
+ */
 function saveTasks() {
     localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(tasks));
 }
 
 // ============ INICIALIZACIÓN Y EVENTOS ============
 
+/**
+ * Manejador del evento de envío del formulario. 
+ * Valida la longitud mínima del título y añade la nueva tarea al estado.
+ */
 document.getElementById('task-form').onsubmit = (e) => {
     e.preventDefault();
-    
     const input = document.getElementById('task-input');
-    const dateInput = document.getElementById('task-date-input');
     const title = input.value.trim();
-    const dueDate = dateInput.value;
-    const today = new Date().toISOString().split('T')[0];
 
-    // --- VALIDACIONES ADICIONALES ---
-    
-    // 1. Longitud mínima (evita tareas vacías o de una sola letra)
+    // Validación de 3 caracteres solicitada
     if (title.length < 3) {
-        alert("El nombre de la tarea es demasiado corto (mínimo 3 caracteres)");
-        input.focus();
+        input.classList.add('border-red-500', 'animate-shake');
+        setTimeout(() => input.classList.remove('animate-shake'), 500);
         return;
     }
-
-    // 2. Validación de fecha (evita fechas pasadas manualmente)
-    if (dueDate && dueDate < today) {
-        alert("No puedes viajar al pasado. Elige una fecha actual o futura.");
-        dateInput.focus();
-        return;
-    }
-
-    // 3. Duplicados (opcional: evita añadir la misma tarea dos veces seguidas)
-    const isDuplicate = tasks.some(t => t.title.toLowerCase() === title.toLowerCase() && !t.completed);
-    if (isDuplicate) {
-        if(!confirm("Ya tienes una tarea pendiente con este nombre. ¿Deseas añadirla de todos modos?")) return;
-    }
+    input.classList.remove('border-red-500');
 
     tasks.push({
         id: Date.now(),
-        title: title,
-        dueDate: dueDate,
+        title,
+        dueDate: document.getElementById('task-date-input').value,
         category: document.getElementById('task-category-select').value,
         priority: document.getElementById('task-priority-select').value,
         completed: false
     });
 
-    // Reset completo del formulario
-    e.target.reset(); 
+    input.value = '';
     saveTasks();
     renderTaskList();
 };
@@ -173,6 +165,9 @@ document.getElementById('task-form').onsubmit = (e) => {
 document.getElementById('search-input').oninput = renderTaskList;
 document.getElementById('custom-color-picker').oninput = (e) => applyThemeColor(e.target.value);
 
+/**
+ * Configura los eventos de clic para los botones de filtrado de la barra lateral.
+ */
 document.querySelectorAll('.barra-lateral li').forEach(li => {
     li.onclick = () => {
         document.querySelectorAll('.barra-lateral li').forEach(l => {
@@ -186,6 +181,9 @@ document.querySelectorAll('.barra-lateral li').forEach(li => {
     };
 });
 
+/**
+ * Alterna entre modo claro y oscuro, guardando la preferencia del usuario.
+ */
 document.getElementById('theme-toggle').onclick = () => {
     const isDark = document.documentElement.classList.toggle('dark');
     localStorage.setItem(STORAGE_KEYS.THEME, isDark ? 'dark' : 'light');
@@ -193,10 +191,10 @@ document.getElementById('theme-toggle').onclick = () => {
     lucide.createIcons();
 };
 
+/**
+ * Inicialización al cargar la página: aplica el tema y color guardados.
+ */
 window.onload = () => {
-    // Aplicar restricciones iniciales
-    setupInputConstraints();
-
     if (localStorage.getItem(STORAGE_KEYS.THEME) === 'dark') {
         document.documentElement.classList.add('dark');
         document.getElementById('theme-icon').setAttribute('data-lucide', 'sun');
