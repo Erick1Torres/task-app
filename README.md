@@ -1,4 +1,4 @@
-# TaskFlow Pro - Gestor de Tareas con Tailwind
+# TaskFlow - Gestor de Tareas con Tailwind
 
 Aplicaciones oara gestinar tareas prsonales, con soporte para **Modo Oscuro**.
 
@@ -24,9 +24,11 @@ https://task-app-two-lake.vercel.app/
 * **Tailwind CSS:** Para el estilizado rápido, responsivo y el sistema de diseño.
 * **JavaScript:** Lógica de manipulación del DOM, filtros y almacenamiento local.
 * **Vercel:** Hosting y despliegue continuo.
+* **Lucide icons:** biblioteca de iconos SVG de código abierto, gratuita y altamente personalizable. 
 
 ---
 
 ## Autor
 
 Erick Cáceres.
+-----------------
