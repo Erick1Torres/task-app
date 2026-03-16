@@ -1,4 +1,4 @@
-# TaskFlow Pro - Gestor de Tareas con Tailwind
+# TaskFlow - Gestor de Tareas con Tailwind
 
 Aplicaciones oara gestinar tareas prsonales, con soporte para **Modo Oscuro**.
 
