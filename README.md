@@ -28,6 +28,25 @@ https://task-app-two-lake.vercel.app/
 
 ---
 
+## Mejoras
+
+**Algunas de las mejoras han sido implementadas con ayuda de IA.**
+
+- implementación de fecha a realizar tarea.
+- tipo de color al gusto del usuario.
+- Checkbox personalizado
+- Alertas Visuales
+- UX Pulida
+
+**Utilización de IA**
+- Estética de la Fecha
+- Rendimiento del Buscador
+- optimización de estructura del formulario para móviles
+
+
+
+
+
 ## Autor
 
 Erick Cáceres.
