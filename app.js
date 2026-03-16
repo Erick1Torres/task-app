@@ -1,347 +1,170 @@
-/**
- * TaskFlow Pro - Gestor de tareas personales
- * @file app.js
- */
-
-// ============ CONSTANTES ============
-const STORAGE_KEY_TASKS = 'misTareas';
-const STORAGE_KEY_THEME = 'theme';
-const TASK_TITLE_MAX_LENGTH = 200;
-const TASK_TITLE_MIN_LENGTH = 1;
-
-/** Clases CSS por prioridad de tarea */
-const PRIORITY_CLASSES = {
-    alta: "border-l-red-500 bg-red-50/30 dark:bg-red-900/10 text-red-700 dark:text-red-400",
-    media: "border-l-amber-500 bg-amber-50/30 dark:bg-amber-900/10 text-amber-700 dark:text-amber-400",
-    baja: "border-l-emerald-500 bg-emerald-50/30 dark:bg-emerald-900/10 text-emerald-700 dark:text-emerald-400"
+// ============ CONFIGURACIÓN Y ESTADO ============
+const STORAGE_KEYS = {
+    TASKS: 'taskflow_tasks',
+    COLOR: 'taskflow_color',
+    THEME: 'taskflow_theme'
 };
 
-/** Peso para ordenar tareas por prioridad (menor = más alta) */
-const PRIORITY_WEIGHT = { alta: 1, media: 2, baja: 3 };
+let tasks = JSON.parse(localStorage.getItem(STORAGE_KEYS.TASKS)) || [];
+let userColor = localStorage.getItem(STORAGE_KEYS.COLOR) || '#4f46e5';
 
-/** Clases para botón de filtro activo */
-const FILTER_BTN_ACTIVE = "filter-btn flex items-center gap-3 cursor-pointer p-3 rounded-xl bg-indigo-600 text-white font-semibold shadow-md outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 dark:focus:ring-offset-slate-800";
+const PRIORITY_MAP = {
+    alta: { class: "border-l-red-500 bg-red-50/40 dark:bg-red-950/20", label: "Alta" },
+    media: { class: "border-l-orange-700 bg-orange-70/50 dark:bg-orange-800/20", label: "Media" },
+    baja: { class: "border-l-green-500 bg-green-50/40 dark:bg-green-950/20", label: "Baja" }
+};
 
-/** Clases para botón de filtro inactivo */
-const FILTER_BTN_INACTIVE = "filter-btn flex items-center gap-3 cursor-pointer p-3 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 transition-all outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 dark:focus:ring-offset-slate-800";
+// ============ MOTOR DE PERSONALIZACIÓN ============
+function applyThemeColor(hex) {
+    userColor = hex;
+    localStorage.setItem(STORAGE_KEYS.COLOR, hex);
+    
+    // UI Updates
+    document.getElementById('custom-color-picker').value = hex;
+    document.getElementById('color-preview').style.backgroundColor = hex;
 
-// ============ ESTADO ============
-let tasks = loadTasksFromStorage();
-
-// ============ ALMACENAMIENTO ============
-
-/**
- * Carga las tareas desde localStorage con manejo de errores.
- * @returns {Array<{id: number, title: string, category: string, priority: string, completed: boolean}>} Lista de tareas
- */
-function loadTasksFromStorage() {
-    try {
-        const stored = localStorage.getItem(STORAGE_KEY_TASKS);
-        const parsed = stored ? JSON.parse(stored) : [];
-        return Array.isArray(parsed) ? parsed : [];
-    } catch (error) {
-        console.warn('Error al cargar tareas desde localStorage:', error);
-        return [];
-    }
-}
-
-/**
- * Guarda las tareas en localStorage.
- * @returns {boolean} true si se guardó correctamente
- */
-function saveTasksToStorage() {
-    try {
-        localStorage.setItem(STORAGE_KEY_TASKS, JSON.stringify(tasks));
-        return true;
-    } catch (error) {
-        console.warn('Error al guardar tareas en localStorage:', error);
-        return false;
-    }
-}
-
-// ============ UTILIDADES ============
-
-/**
- * Escapa HTML para prevenir ataques XSS.
- * @param {string} text - Texto a escapar
- * @returns {string} Texto escapado de forma segura
- */
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-/**
- * Obtiene el filtro de categoría actualmente activo.
- * @returns {string} 'all' | 'trabajo' | 'casa' | 'estudios'
- */
-function getActiveCategoryFilter() {
-    const activeFilterElement = document.querySelector('.barra-lateral li[aria-pressed="true"]');
-    return activeFilterElement?.dataset.filter ?? 'all';
-}
-
-/**
- * Filtra y ordena las tareas según el criterio actual.
- * @param {string} categoryFilter - Filtro de categoría
- * @param {string} searchQuery - Texto de búsqueda (minúsculas)
- * @returns {Array} Tareas filtradas y ordenadas
- */
-function getFilteredAndSortedTasks(categoryFilter, searchQuery) {
-    return tasks
-        .filter(task => {
-            const matchesCategory = categoryFilter === 'all' || task.category === categoryFilter;
-            const matchesSearch = task.title.toLowerCase().includes(searchQuery);
-            return matchesCategory && matchesSearch;
-        })
-        .sort((taskA, taskB) =>
-            (PRIORITY_WEIGHT[taskA.priority] ?? 2) - (PRIORITY_WEIGHT[taskB.priority] ?? 2)
-        );
-}
-
-/**
- * Comprueba si ya existe una tarea con el mismo título (case-insensitive).
- * @param {string} title - Título a comprobar
- * @returns {boolean}
- */
-function isDuplicateTask(title) {
-    const normalizedTitle = title.toLowerCase().trim();
-    return tasks.some(task => task.title.toLowerCase() === normalizedTitle);
-}
-
-// ============ VALIDACIÓN DE FORMULARIO ============
-
-/**
- * Valida el título de una nueva tarea.
- * @param {string} title - Título a validar
- * @returns {{valid: boolean, message?: string}} Resultado de la validación
- */
-function validateTaskTitle(title) {
-    const trimmedTitle = title.trim();
-
-    if (trimmedTitle.length < TASK_TITLE_MIN_LENGTH) {
-        return { valid: false, message: 'El título no puede estar vacío.' };
-    }
-    if (trimmedTitle.length > TASK_TITLE_MAX_LENGTH) {
-        return { valid: false, message: `Máximo ${TASK_TITLE_MAX_LENGTH} caracteres.` };
-    }
-    if (isDuplicateTask(trimmedTitle)) {
-        return { valid: false, message: 'Ya existe una tarea con ese título.' };
-    }
-
-    return { valid: true };
-}
-
-// ============ RENDERIZADO ============
-
-/**
- * Persiste las tareas y vuelve a renderizar la lista.
- */
-function persistAndRender() {
-    saveTasksToStorage();
-    renderTaskList();
-}
-
-/**
- * Renderiza la lista de tareas según filtros y búsqueda actuales.
- */
-function renderTaskList() {
-    const categoryFilter = getActiveCategoryFilter();
-    const searchQuery = document.getElementById('search-input').value.toLowerCase().trim();
-    const taskListElement = document.getElementById('task-list');
-    const emptyStateElement = document.getElementById('empty-state');
-
-    const filteredTasks = getFilteredAndSortedTasks(categoryFilter, searchQuery);
-
-    taskListElement.innerHTML = '';
-
-    if (filteredTasks.length === 0) {
-        emptyStateElement.classList.remove('hidden');
-        emptyStateElement.textContent = tasks.length === 0
-            ? 'No hay tareas. ¡Añade una para empezar!'
-            : 'No hay tareas que coincidan con tu búsqueda o filtro.';
-    } else {
-        emptyStateElement.classList.add('hidden');
-        const fragment = document.createDocumentFragment();
-        filteredTasks.forEach(task => fragment.appendChild(buildTaskElement(task)));
-        taskListElement.appendChild(fragment);
-    }
-
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-}
-
-/**
- * Crea el elemento DOM de una tarea.
- * @param {Object} task - Objeto tarea con id, title, category, priority, completed
- * @returns {HTMLElement} Elemento article con la tarea
- */
-function buildTaskElement(task) {
-    const priorityClassName = PRIORITY_CLASSES[task.priority] ?? "border-l-slate-300 bg-slate-50 dark:bg-slate-800/50";
-    const completedClass = task.completed ? 'opacity-40 grayscale-[0.5]' : '';
-    const titleClass = task.completed ? 'line-through opacity-50' : 'text-slate-800 dark:text-white';
-
-    const article = document.createElement('article');
-    article.className = `flex items-center justify-between p-5 rounded-2xl border border-slate-100 dark:border-slate-700 border-l-4 shadow-sm transition-all group ${priorityClassName} ${completedClass}`;
-    article.dataset.taskId = task.id;
-
-    const safeTitle = escapeHtml(task.title);
-    const safeCategory = escapeHtml(task.category);
-    const safePriority = escapeHtml(task.priority);
-    const ariaLabelCheckbox = `Marcar tarea como ${task.completed ? 'pendiente' : 'completada'}: ${safeTitle}`;
-    const ariaLabelDelete = `Eliminar tarea: ${safeTitle}`;
-
-    article.innerHTML = `
-        <div class="flex items-center gap-4">
-            <input type="checkbox" ${task.completed ? 'checked' : ''} 
-                   class="w-5 h-5 rounded cursor-pointer accent-indigo-600 border-slate-300" 
-                   aria-label="${ariaLabelCheckbox}">
-            <div>
-                <p class="font-bold ${titleClass}">${safeTitle}</p>
-                <div class="flex items-center gap-2 mt-1">
-                    <span class="text-[10px] font-black uppercase tracking-widest opacity-60">${safeCategory}</span>
-                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-white/50 dark:bg-black/20 border border-current/10">${safePriority}</span>
-                </div>
-            </div>
-        </div>
-        <button type="button" class="delete-btn opacity-0 group-hover:opacity-100 p-2 text-slate-400 hover:text-red-500 transition-all" aria-label="${ariaLabelDelete}">
-            <i data-lucide="trash-2" class="w-5 h-5" aria-hidden="true"></i>
-        </button>
+    // CSS Dinámico con mayor especificidad
+    let styleTag = document.getElementById('dynamic-brand-styles') || document.createElement('style');
+    styleTag.id = 'dynamic-brand-styles';
+    styleTag.innerHTML = `
+        :root { --brand-primary: ${hex}; }
+        #main-header, #add-btn, .active-filter { background-color: ${hex} !important; }
+        .focus-within\:ring-indigo-500:focus-within, .focus\:ring-indigo-500:focus { 
+            --tw-ring-color: ${hex} !important; 
+            border-color: ${hex} !important; 
+        }
+        input:focus, select:focus { border-color: ${hex} !important; }
     `;
-
-    article.querySelector('input[type="checkbox"]').onchange = (event) => {
-        task.completed = event.target.checked;
-        persistAndRender();
-    };
-
-    article.querySelector('.delete-btn').onclick = () => {
-        article.animate([{ opacity: 1, scale: 1 }, { opacity: 0, scale: 0.9 }], { duration: 200 }).onfinish = () => {
-            tasks = tasks.filter(t => t.id !== task.id);
-            persistAndRender();
-        };
-    };
-
-    return article;
+    document.head.appendChild(styleTag);
 }
 
-// ============ MANEJADORES DE EVENTOS ============
+// ============ LÓGICA DE TAREAS ============
+function renderTaskList() {
+    const list = document.getElementById('task-list');
+    const emptyState = document.getElementById('empty-state');
+    const searchQuery = document.getElementById('search-input').value.toLowerCase().trim();
+    const activeFilter = document.querySelector('.barra-lateral li[aria-pressed="true"]')?.dataset.filter || 'all';
 
-/**
- * Muestra un mensaje de error en el formulario.
- * @param {HTMLInputElement} inputElement - Campo de entrada
- * @param {string} message - Mensaje a mostrar
- */
-function showFormError(inputElement, message) {
-    inputElement.setAttribute('aria-invalid', 'true');
-    inputElement.setCustomValidity(message);
-    const errorSpan = document.getElementById('task-input-error');
-    if (errorSpan) {
-        errorSpan.textContent = message;
-        errorSpan.classList.remove('sr-only');
+    const filtered = tasks.filter(t => {
+        const matchesCategory = activeFilter === 'all' || t.category === activeFilter;
+        const matchesSearch = t.title.toLowerCase().includes(searchQuery);
+        return matchesCategory && matchesSearch;
+    });
+
+    list.innerHTML = '';
+    
+    if (filtered.length === 0) {
+        emptyState.classList.remove('hidden');
+    } else {
+        emptyState.classList.add('hidden');
+        filtered.sort((a, b) => b.id - a.id).forEach(task => {
+            const today = new Date().toISOString().split('T')[0];
+            const isOverdue = task.dueDate && task.dueDate < today && !task.completed;
+            const priorityData = PRIORITY_MAP[task.priority];
+
+            const taskEl = document.createElement('div');
+            taskEl.className = `group flex items-center justify-between p-5 rounded-[2rem] border border-slate-100 dark:border-slate-800 border-l-4 shadow-sm transition-all hover:shadow-md ${priorityData.class} ${task.completed ? 'opacity-50' : ''}`;
+            
+            taskEl.innerHTML = `
+                <div class="flex items-center gap-5">
+                    <div class="relative flex items-center">
+                        <input type="checkbox" ${task.completed ? 'checked' : ''} 
+                               class="w-6 h-6 rounded-full cursor-pointer transition-all border-2 border-slate-300 appearance-none checked:bg-[var(--brand-primary)] checked:border-transparent">
+                        <i data-lucide="check" class="w-4 h-4 text-white absolute left-1 pointer-events-none opacity-0 transition-opacity"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-800 dark:text-slate-100 ${task.completed ? 'line-through opacity-50' : ''}">${task.title}</h3>
+                        <div class="flex flex-wrap gap-3 mt-1.5 items-center">
+                            <span class="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 bg-white/60 dark:bg-black/20 rounded-lg text-slate-500">${task.category}</span>
+                            <span class="text-[9px] font-black uppercase tracking-widest text-slate-400">• ${priorityData.label}</span>
+                            <span class="flex items-center gap-1 text-[10px] ${isOverdue ? 'text-red-500 font-bold animate-pulse' : 'text-slate-400 font-medium'}">
+                                <i data-lucide="calendar" class="w-3 h-3"></i> ${task.dueDate || 'Sin fecha'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <button title="Eliminar" class="delete-btn opacity-0 group-hover:opacity-100 p-3 rounded-2xl hover:bg-red-100 dark:hover:bg-red-900/30 text-slate-400 hover:text-red-500 transition-all">
+                    <i data-lucide="trash-2" class="w-5 h-5"></i>
+                </button>
+            `;
+
+            // Eventos dinámicos
+            const checkbox = taskEl.querySelector('input[type="checkbox"]');
+            checkbox.onchange = () => { task.completed = checkbox.checked; saveTasks(); renderTaskList(); };
+            
+            taskEl.querySelector('.delete-btn').onclick = () => {
+                tasks = tasks.filter(t => t.id !== task.id);
+                saveTasks();
+                renderTaskList();
+            };
+
+            list.appendChild(itemIconFix(taskEl));
+        });
     }
-    inputElement.reportValidity();
+    lucide.createIcons();
 }
 
-/**
- * Limpia el estado de error del formulario.
- * @param {HTMLInputElement} inputElement - Campo de entrada
- */
-function clearFormError(inputElement) {
-    inputElement.setAttribute('aria-invalid', 'false');
-    inputElement.setCustomValidity('');
-    const errorSpan = document.getElementById('task-input-error');
-    if (errorSpan) {
-        errorSpan.textContent = '';
-        errorSpan.classList.add('sr-only');
+/** Fix para que Lucide funcione en elementos inyectados */
+function itemIconFix(el) {
+    if (window.lucide) {
+        const checkIcon = el.querySelector('input:checked + i');
+        if (checkIcon) checkIcon.style.opacity = "1";
     }
+    return el;
 }
 
-/**
- * Maneja el envío del formulario de nueva tarea.
- */
-function handleTaskFormSubmit(event) {
-    event.preventDefault();
-    const titleInput = document.getElementById('task-input');
-    const title = titleInput.value.trim();
+function saveTasks() {
+    localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(tasks));
+}
 
-    const validation = validateTaskTitle(title);
-    if (!validation.valid) {
-        showFormError(titleInput, validation.message);
-        titleInput.focus();
-        return;
-    }
-
-    clearFormError(titleInput);
+// ============ INICIALIZACIÓN Y EVENTOS ============
+document.getElementById('task-form').onsubmit = (e) => {
+    e.preventDefault();
+    const input = document.getElementById('task-input');
+    if (!input.value.trim()) return;
 
     tasks.push({
         id: Date.now(),
-        title: title,
+        title: input.value.trim(),
+        dueDate: document.getElementById('task-date-input').value,
         category: document.getElementById('task-category-select').value,
         priority: document.getElementById('task-priority-select').value,
         completed: false
     });
 
-    titleInput.value = '';
-    titleInput.setCustomValidity('');
-    persistAndRender();
-}
-
-/**
- * Aplica un filtro de categoría y actualiza la UI.
- * @param {HTMLElement} clickedButton - Botón de filtro clicado
- */
-function applyCategoryFilter(clickedButton) {
-    document.querySelectorAll('.barra-lateral li[data-filter]').forEach(button => {
-        button.className = FILTER_BTN_INACTIVE;
-        button.setAttribute('aria-pressed', 'false');
-    });
-    clickedButton.className = FILTER_BTN_ACTIVE;
-    clickedButton.setAttribute('aria-pressed', 'true');
+    input.value = '';
+    saveTasks();
     renderTaskList();
-}
+};
 
-/**
- * Alterna entre modo claro y oscuro.
- */
-function toggleTheme() {
-    const isDark = document.documentElement.classList.toggle('dark');
-    localStorage.setItem(STORAGE_KEY_THEME, isDark ? 'dark' : 'light');
-    const iconElement = document.getElementById('theme-icon');
-    iconElement.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-}
+document.getElementById('search-input').oninput = renderTaskList;
+document.getElementById('custom-color-picker').oninput = (e) => applyThemeColor(e.target.value);
 
-/**
- * Inicializa la aplicación al cargar el DOM.
- */
-function initApp() {
-    const savedTheme = localStorage.getItem(STORAGE_KEY_THEME);
-    if (savedTheme === 'dark') {
-        document.documentElement.classList.add('dark');
-        document.getElementById('theme-icon').setAttribute('data-lucide', 'sun');
-    }
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-    renderTaskList();
-}
-
-// ============ ENLACE DE EVENTOS ============
-
-document.getElementById('task-form').onsubmit = handleTaskFormSubmit;
-
-document.getElementById('task-input').oninput = () => clearFormError(document.getElementById('task-input'));
-
-document.querySelectorAll('.barra-lateral li[data-filter]').forEach(filterButton => {
-    const handleFilterClick = () => applyCategoryFilter(filterButton);
-    filterButton.onclick = handleFilterClick;
-    filterButton.onkeydown = (event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            handleFilterClick();
-        }
+document.querySelectorAll('.barra-lateral li').forEach(li => {
+    li.onclick = () => {
+        document.querySelectorAll('.barra-lateral li').forEach(l => {
+            l.className = "filter-btn flex items-center gap-3 cursor-pointer p-3.5 rounded-2xl text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 transition-all";
+            l.setAttribute('aria-pressed', 'false');
+        });
+        li.className = "filter-btn flex items-center gap-3 cursor-pointer p-3.5 rounded-2xl text-white font-bold shadow-lg active-filter transition-all";
+        li.setAttribute('aria-pressed', 'true');
+        applyThemeColor(userColor); 
+        renderTaskList();
     };
 });
 
-document.getElementById('search-input').oninput = renderTaskList;
+document.getElementById('theme-toggle').onclick = () => {
+    const isDark = document.documentElement.classList.toggle('dark');
+    localStorage.setItem(STORAGE_KEYS.THEME, isDark ? 'dark' : 'light');
+    document.getElementById('theme-icon').setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+    lucide.createIcons();
+};
 
-document.getElementById('theme-toggle').onclick = toggleTheme;
-
-document.addEventListener('DOMContentLoaded', initApp);
+window.onload = () => {
+    if (localStorage.getItem(STORAGE_KEYS.THEME) === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.getElementById('theme-icon').setAttribute('data-lucide', 'sun');
+    }
+    applyThemeColor(userColor);
+    renderTaskList();
+};
