@@ -19,11 +19,9 @@ function applyThemeColor(hex) {
     userColor = hex;
     localStorage.setItem(STORAGE_KEYS.COLOR, hex);
     
-    // UI Updates
     document.getElementById('custom-color-picker').value = hex;
     document.getElementById('color-preview').style.backgroundColor = hex;
 
-    // CSS Dinámico con mayor especificidad
     let styleTag = document.getElementById('dynamic-brand-styles') || document.createElement('style');
     styleTag.id = 'dynamic-brand-styles';
     styleTag.innerHTML = `
@@ -39,6 +37,15 @@ function applyThemeColor(hex) {
 }
 
 // ============ LÓGICA DE TAREAS ============
+
+/** * NUEVA: Configura límites visuales en los inputs 
+ */
+function setupInputConstraints() {
+    const dateInput = document.getElementById('task-date-input');
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.min = today; // Evita seleccionar fechas pasadas en el calendario
+}
+
 function renderTaskList() {
     const list = document.getElementById('task-list');
     const emptyState = document.getElementById('empty-state');
@@ -88,7 +95,6 @@ function renderTaskList() {
                 </button>
             `;
 
-            // Eventos dinámicos
             const checkbox = taskEl.querySelector('input[type="checkbox"]');
             checkbox.onchange = () => { task.completed = checkbox.checked; saveTasks(); renderTaskList(); };
             
@@ -104,7 +110,6 @@ function renderTaskList() {
     lucide.createIcons();
 }
 
-/** Fix para que Lucide funcione en elementos inyectados */
 function itemIconFix(el) {
     if (window.lucide) {
         const checkIcon = el.querySelector('input:checked + i');
@@ -118,21 +123,49 @@ function saveTasks() {
 }
 
 // ============ INICIALIZACIÓN Y EVENTOS ============
+
 document.getElementById('task-form').onsubmit = (e) => {
     e.preventDefault();
+    
     const input = document.getElementById('task-input');
-    if (!input.value.trim()) return;
+    const dateInput = document.getElementById('task-date-input');
+    const title = input.value.trim();
+    const dueDate = dateInput.value;
+    const today = new Date().toISOString().split('T')[0];
+
+    // --- VALIDACIONES ADICIONALES ---
+    
+    // 1. Longitud mínima (evita tareas vacías o de una sola letra)
+    if (title.length < 3) {
+        alert("El nombre de la tarea es demasiado corto (mínimo 3 caracteres)");
+        input.focus();
+        return;
+    }
+
+    // 2. Validación de fecha (evita fechas pasadas manualmente)
+    if (dueDate && dueDate < today) {
+        alert("No puedes viajar al pasado. Elige una fecha actual o futura.");
+        dateInput.focus();
+        return;
+    }
+
+    // 3. Duplicados (opcional: evita añadir la misma tarea dos veces seguidas)
+    const isDuplicate = tasks.some(t => t.title.toLowerCase() === title.toLowerCase() && !t.completed);
+    if (isDuplicate) {
+        if(!confirm("Ya tienes una tarea pendiente con este nombre. ¿Deseas añadirla de todos modos?")) return;
+    }
 
     tasks.push({
         id: Date.now(),
-        title: input.value.trim(),
-        dueDate: document.getElementById('task-date-input').value,
+        title: title,
+        dueDate: dueDate,
         category: document.getElementById('task-category-select').value,
         priority: document.getElementById('task-priority-select').value,
         completed: false
     });
 
-    input.value = '';
+    // Reset completo del formulario
+    e.target.reset(); 
     saveTasks();
     renderTaskList();
 };
@@ -161,6 +194,9 @@ document.getElementById('theme-toggle').onclick = () => {
 };
 
 window.onload = () => {
+    // Aplicar restricciones iniciales
+    setupInputConstraints();
+
     if (localStorage.getItem(STORAGE_KEYS.THEME) === 'dark') {
         document.documentElement.classList.add('dark');
         document.getElementById('theme-icon').setAttribute('data-lucide', 'sun');
