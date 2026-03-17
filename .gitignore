@@ -10,3 +10,6 @@ Thumbs.db
 # Editor (VS Code)
 .vscode/
 *.swp
+
+# Cursor MCP local config (contains secrets)
+cursor/mcp.local.json
