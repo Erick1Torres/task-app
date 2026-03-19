@@ -48,7 +48,6 @@
         `;
     }
 
-    // 4. MEJORA: Renderizado con Seguridad Anti-XSS (textContent)
     function renderTaskList() {
         const list = document.getElementById('task-list');
         const emptyState = document.getElementById('empty-state');
@@ -95,12 +94,12 @@
         if (window.lucide) lucide.createIcons();
     }
 
-    // 5. MEJORA: Gestión de Eventos y Validaciones
+    
     function init() {
         const form = document.getElementById('task-form');
         const input = document.getElementById('task-input');
 
-        // MEJORA: Lógica de ADVERTENCIAS (Arreglada)
+        // MEJORA: Lógica de ADVERTENCIAS 
         form?.addEventListener('submit', (e) => {
             e.preventDefault();
             const title = input.value.trim();
@@ -133,7 +132,7 @@
             renderTaskList();
         });
 
-        // 7. MEJORA: Delegación de Eventos (Un solo listener para toda la lista)
+        
         document.getElementById('task-list')?.addEventListener('click', (e) => {
             const taskEl = e.target.closest('[data-id]');
             if (!taskEl) return;
@@ -153,7 +152,6 @@
             }
         });
 
-        // 8. MEJORA: Filtros con actualización de estilos corregida
         document.querySelectorAll('.barra-lateral li').forEach(li => {
             li.addEventListener('click', () => {
                 document.querySelectorAll('.barra-lateral li').forEach(l => {
@@ -166,12 +164,10 @@
             });
         });
 
-        // 9. MEJORA: Selector de color vinculado
         document.getElementById('custom-color-picker')?.addEventListener('input', (e) => {
             applyThemeColor(e.target.value);
         });
 
-        // 10. MEJORA: Modo Oscuro optimizado
         document.getElementById('theme-toggle')?.addEventListener('click', () => {
             const isDark = document.documentElement.classList.toggle('dark');
             localStorage.setItem(STORAGE_KEYS.THEME, isDark ? 'dark' : 'light');
