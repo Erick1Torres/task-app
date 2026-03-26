@@ -1,15 +1,3 @@
-# Node
-node_modules/
-npm-debug.log
-yarn-error.log
-
-# Sistema Operativo
+server/node_modules/
+server/.env
 .DS_Store
-Thumbs.db
-
-# Editor (VS Code)
-.vscode/
-*.swp
-
-# Cursor MCP local config (contains secrets)
-cursor/mcp.local.json
