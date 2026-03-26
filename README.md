@@ -142,6 +142,67 @@ Crea tareas (mínimo 3 caracteres), cambia el color de identidad y experimenta l
 
 
 ---
+### Documentación Técnica de la API.
+
+#### 1. Documentación con Swagger (OpenAPI 3.0)
+Swagger permite que otros desarrolladores entiendan tu API sin leer una línea de código. En un entorno profesional, esto se sirve en `/api-docs`.
+
+Definición del Recurso Tarea:
+
+- POST `/tasks:Cuerpo:`
+`{ "title": string, "priority": string, "category": string }`
+
+- Validación: Si `title` tiene menos de 3 caracteres -> 400 Bad Request.
+- GET `/tasks/{id}`:
+  Parámetro: `id` (numérico/timestamp).
+  Error: Si el ID no existe -> 404 Not Found.
+
+### 2. Pruebas de Estrés y Errores (Postman / Thunder Client)
+Para garantizar la calidad, debemos "romper" la API intencionadamente. Aquí tienes cómo configurar tus pruebas:
+
+A. Forzando el Error 400 (Bad Request)
+Escenario: El usuario envía una tarea vacía o con datos mal formateados.
+
+Request: `POST /api/v1/tasks` con el body `{"title": "Ab"}` (demasiado corto).
+
+Resultado esperado:
+
+```JSON
+{
+  "status": "error",
+  "code": 400,
+  "message": "Validación fallida: El título debe tener al menos 3 caracteres."
+}
+```
+
+B. Forzando el Error 404 (Not Found)
+Escenario: Intentar actualizar o borrar una tarea que ya no existe.
+
+Request: `DELETE /api/v1/tasks/999999`
+
+Resultado esperado:
+```JSON
+{
+  "status": "error",
+  "code": 404,
+  "message": "Recurso no encontrado: La tarea con ID 999999 no existe en el servidor."
+}
+```
+
+C. Forzando el Error 500 (Internal Server Error)
+Escenario: Error en la persistencia (archivo `tasks.json` bloqueado o sin permisos).
+
+Simulación: Cambia temporalmente los permisos del archivo a "Solo lectura" e intenta guardar una tarea.
+
+Resultado esperado:
+```JSON
+{
+  "status": "error",
+  "code": 500,
+  "message": "Error crítico: No se pudo escribir en la base de datos de persistencia."
+}
+```
+---
 
 ### Estados de Respuesta HTTP (Status Codes).
 
