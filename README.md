@@ -1,116 +1,163 @@
-# TaskFlow Pro - Gestor de Tareas
+# TaskFlow Pro
 
-Aplicación para gestionar tareas personales con **fecha**, **prioridad**, **categorías**, **búsqueda**, **modo oscuro** y **personalización de color**. Todo corre del lado del navegador y guarda tus datos en `localStorage`.
+**TaskFlow Pro** es una solución avanzada de gestión de tareas que ha evolucionado de una herramienta de persistencia local a una arquitectura **Fullstack Asíncrona**. Implementa un robusto backend en **Node.js** y un frontend reactivo de alto rendimiento diseñado con **Vanilla JavaScript** y **Tailwind CSS**.
 
-## Demo en vivo
+---
 
-[task-app-two-lake.vercel.app](https://task-app-two-lake.vercel.app/)
+## Arquitectura del Sistema
+
+El proyecto se rige por el principio de **Separación de Concernimientos (SoC)**, estructurado en capas independientes para facilitar el mantenimiento y la escalabilidad:
+
+1.  **Capa de Presentación (UI):** Diseño atómico y responsivo mediante Tailwind CSS, con un motor de inyección de estilos dinámicos en tiempo de ejecución.
+2.  **Lógica de Orquestación (App Core):** Un módulo encapsulado (IIFE) en `app.js` que gestiona el estado de la interfaz, los filtros y la reactividad del DOM sin contaminar el scope global.
+3.  **Capa de Abstracción de Red (API Client):** Localizada en `cliente.js`, esta capa encapsula las peticiones `fetch`, abstrayendo la lógica de comunicación HTTP del resto de la aplicación.
+
+---
 
 ## Características
 
-- **Interfaz moderna con Tailwind CSS** (CDN).
-- **Modo Oscuro (Dark Mode)** con persistencia en `localStorage`.
-- **Persistencia de tareas**: no se pierden al recargar.
-- **Categorías**: Trabajo, Casa y Estudios.
-- **Fecha a realizar** (muestra la fecha en cada tarea).
-- **Prioridad**: Baja, Media y Alta (estilo/etiqueta por prioridad).
-- **Campo de búsqueda (UI)**: el input existe, pero en `app.js` no hay lógica para filtrar por texto.
-- **UX con feedback visual** (transiciones, estados y alertas de validación).
-- **Color de identidad** personalizable (afecta header, filtros y estilos destacados).
+-   **Interfaz Moderna:** Uso de Tailwind CSS (JIT Mode) para una experiencia fluida y adaptable.
+-   **Modo Oscuro Pro:** Persistencia inteligente de tema (`dark`/`light`) basada en `localStorage`.
+-   **Identidad Visual Dinámica:** Selector de color que sobreescribe variables CSS (`:root`) para unificar el branding en header, botones y estados activos.
+-   **Gestión de Tareas Completa:** Sistema de categorías (Trabajo, Casa, Estudios) y prioridades (Baja, Media, Alta).
+-   **Búsqueda en Tiempo Real:** Motor de filtrado por texto que procesa la colección de tareas en memoria.
 
-## Cómo funciona (datos)
+### Gestión de Estados de Red (UX/UI)
+La aplicación gestiona la latencia y la comunicación con el servidor Node.js mediante tres estados fundamentales:
+-   **Estado de Carga (Loading):** Durante las peticiones, el botón de acción muestra un *spinner* animado (`loader-2`) y la lista se atenúa (`opacity-40`) para evitar acciones duplicadas.
+-   **Estado de Éxito (Success):** Notificaciones flotantes (*Toasts*) confirman visualmente cada operación exitosa (Crear, Actualizar, Eliminar) en el servidor.
+-   **Estado de Error (Fallback):** Si el servidor no responde, el sistema activa automáticamente el **Modo Offline**, garantizando la continuidad mediante `localStorage`.
 
-La app mantiene un listado de tareas en memoria y lo sincroniza con `localStorage` usando estas claves:
+### Validaciones y Lógica de Negocio
+-   **Validación de Título:** Bloqueo de envío para entradas vacías o menores a 3 caracteres, con feedback mediante animación `shake`, borde rojo y cambio dinámico de `placeholder`.
+-   **Lógica de Fechas Inteligente:** Si una tarea se crea sin fecha, el sistema asigna y renderiza automáticamente el estado **"⏳ Sin límite"**.
 
-- `taskflow_tasks` (lista de tareas)
-- `taskflow_color` (color elegido por el usuario)
-- `taskflow_theme` (modo `dark`/`light`)
+---
 
-Cada tarea incluye:
+### Funcionamiento de Middlewares (Terminología Técnica)
 
-- `id`
-- `title`
-- `category`
-- `priority`
-- `dueDate`
-- `completed`
+En el backend de TaskFlow, los Middlewares son funciones intermedias que procesan la solicitud (`req`) antes de que llegue al manejador de ruta final. Hemos implementado:
 
-## Inicio rápido
+CORS (Cross-Origin Resource Sharing): Este middleware gestiona la política de seguridad del navegador. Permite que el frontend (ej. `localhost:5500`) realice peticiones al backend (`localhost:3000`), validando los encabezados `Access-Control-Allow-Origin`.
 
-1. Abre `index.html` en tu navegador.
-2. Crea tareas desde el formulario.
-3. Cambia el **tema** y el **color** desde el panel lateral.
+Built-in JSON Parsing: Utiliza `express.json()`. Este middleware intercepta las peticiones con el encabezado `Content-Type: application/json`, analiza el flujo de datos (stream) y deserializa el JSON, inyectándolo en el objeto `req.body`.
 
-## Ejemplos de uso
+Error Handling Middleware: Un mecanismo global que captura excepciones durante el ciclo de vida de la petición, garantizando que el servidor responda con un código de estado adecuado (500 o 400) en lugar de colapsar la instancia de Node.js.
 
-### Crear una tarea con fecha y prioridad
+---
 
-1. En `¿Qué hay que hacer?`, escribe el título de la tarea (mínimo 3 caracteres).
-2. Selecciona una **Fecha** en el campo `Fecha`.
-3. Elige **Categoría** (Trabajo, Casa o Estudios).
-4. Elige **Prioridad** (Baja, Media o Alta).
-5. Presiona el botón `+` para agregarla.
+## Guía de Interacción con la API REST (v1)
 
-La tarea se guardará en `localStorage` y aparecerá en la lista.
+La comunicación con el servidor Node.js se realiza mediante el protocolo HTTP y formato JSON. La URL base por defecto es `http://localhost:3000/api/v1/tasks`.
 
-### Filtrar por categoría
+### 1. Obtener listado de tareas (GET).
+Recupera todas las tareas almacenadas en el servidor.
 
-1. En la barra lateral, haz clic en `Todas`, `Trabajo`, `Casa` o `Estudios`.
-2. La lista se re-renderiza mostrando solo las tareas de esa categoría (según `currentFilter`).
 
-### Marcar como completada
+```javascript
+// Ejemplo con Fetch API
+const response = await fetch('http://localhost:3000/api/v1/tasks');
+const tasks = await response.json();
+console.log(tasks);
+```
+Terminal (URL): `curl -X GET http://localhost:3000/api/v1/tasks`
 
-1. Busca la tarea en la lista.
-2. Haz clic en el checkbox de la tarjeta.
-3. La tarea se marca como completada (aplica estilo y se persiste el cambio).
+----
 
-### Eliminar una tarea
+### 2. Crear una nueva tarea (POST).
+Envía una tarea al servidor para su persistencia.
+```javascript
+const newTask = {
+    title: "Aprender Arquitectura Senior",
+    category: "estudios",
+    priority: "alta",
+    dueDate: "2024-12-31" // La fecha puede no ponerse si la tarea no esta prevista para ningún día.
+};
 
-1. En la tarjeta de la tarea, haz clic en el ícono de `trash`.
-2. Se elimina del listado y se actualiza el `localStorage`.
+await fetch('http://localhost:3000/api/v1/tasks', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(newTask)
+});
+```
+Terminal URL: `curl -X POST -H "Content-Type: application/json" -d '{"title":"Nueva Tarea"}' http://localhost:3000/api/v1/tasks`
 
-### Cambiar modo oscuro / tema
+----
 
-1. Presiona el botón del tema (ícono `moon` / `sun` en el header).
-2. El modo se guarda en `localStorage` como `taskflow_theme`.
+### 3. Actualizar estado de tarea (PUT).
 
-### Personalizar el color de identidad
+Permite modificar el estado de completado o los datos de una tarea mediante su ID.
 
-1. En el panel lateral, abre el selector de color `Paleta`.
-2. Elige un color y la UI se actualiza (header, filtros y estilos destacados).
-3. El color queda persistido en `localStorage` como `taskflow_color`.
+```javascript
+await fetch(`http://localhost:3000/api/v1/tasks/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ completed: true })
+});
+```
+----
 
-## Despliegue
+### 4. Eliminar tarea (DELETE).
+Elimina permanentemente la tarea del registro del servidor.
+```javascript
+await fetch(`http://localhost:3000/api/v1/tasks/${id}`, {
+    method: 'DELETE'
+});
+```
+---
 
-Es un proyecto **estático** (`index.html` + `app.js`), por lo que puedes desplegarlo fácilmente en plataformas como **Vercel**.
+### Estructura del Proyecto.
 
-## Tecnologías utilizadas
+```Plaintext
+TaskFlow/
+|_______________________
+│   ├── data/tasks.json
+│   └── server.js ──src -> api(cliente), config(env), controllers(controller), routers(router), services(service), index.js                   
+│   ├── index.html                
+│   ├── app.js                                           
+└── README.md                     
 
-- **HTML5 semántico** (`header`, `main`, `aside`).
-- **Tailwind CSS.**
-- **Lucide Icons** vía `unpkg`.
-- **JavaScript** para la lógica de DOM y persistencia.
+# Servidor Node.js
+# Base de datos persistente (JSON)
+# API REST y Middlewares (CORS, Express JSON)
+# Cliente SPA
+# Vista y Tailwind Config
+# Lógica de UI y Estados (IIFE)
+# Abstracción de peticiones Fetch
+# Documentación técnica
+```
+--------
 
-## Documentación técnica (JavaScript)
 
-Este proyecto está implementado en `app.js` y toda la lógica vive dentro de una IIFE (encapsulamiento) para evitar variables globales.
+### Inicio Rápido.
 
-### Estado y claves
+1. Levantar el Servidor:
+```bash
+cd backend
+node server.js
+```
+2. Abrir el Cliente: Lanza `index.html` usando un servidor local (ej. Live Server en VS Code).
+3. Uso:
+Crea tareas (mínimo 3 caracteres), cambia el color de identidad y experimenta la sincronización en tiempo real.
 
-- `STORAGE_KEYS` define las claves usadas en `localStorage`.
-- `tasks` es el array en memoria con las tareas cargadas/actualizadas.
-- `userColor` es el color de identidad elegido por el usuario (persistido).
-- `currentFilter` guarda el filtro activo de categoría (`all`, `trabajo`, `casa`, `estudios`).
-- `PRIORITY_MAP` mapea cada prioridad (`alta`, `media`, `baja`) a una etiqueta visual (clases CSS + nombre).
 
-### Funciones principales
+---
 
-- `applyThemeColor(hex)`: actualiza `userColor` y persiste el color en `localStorage` (`taskflow_color`); sincroniza el input `#custom-color-picker` y el preview `#color-preview`; crea/actualiza la etiqueta `<style>` dinámica `#dynamic-brand-styles` para aplicar el color a header, filtros, checkbox y estilos destacados.
-- `renderTaskList()`: filtra `tasks` según `currentFilter`; renderiza el listado dentro de `#task-list`; muestra/oculta `#empty-state` cuando no hay resultados; ordena por `id` descendente; genera tarjetas con `dataset.id` para identificar la tarea al hacer click; no implementa filtrado por texto (solo por categoría y cambios de estado).
-- `init()`: enlaza el `submit` del formulario `#task-form` (valida título >= 3 caracteres, crea una tarea con `title`, `category`, `priority`, `dueDate` y `completed: false`, persiste en `localStorage` y re-renderiza); enlaza el click en `#task-list` para alternar completadas vía `.task-check` y eliminar vía `.delete-btn`; enlaza clicks de filtros en `.barra-lateral li` para actualizar `currentFilter` y re-renderizar; enlaza el input de color `#custom-color-picker` para llamar a `applyThemeColor`; enlaza el toggle `#theme-toggle` para alternar la clase `dark`, persistir `taskflow_theme` y actualizar el icono de Lucide.
-- Bootstrap en `window.load`: aplica el tema guardado (`taskflow_theme`) si es `dark`; llama `applyThemeColor(userColor)`; ejecuta `init()` y luego `renderTaskList()`.
+### Estados de Respuesta HTTP (Status Codes).
 
-## Autor
+El servidor comunica el resultado de las operaciones mediante códigos estandarizados:
 
-Erick Cáceres.
+- 200 OK: Operación exitosa (Lectura/Actualización/Borrado).
 
+- 201 Created: Recurso creado con éxito en el servidor.
+
+- 400 Bad Request: Datos enviados inválidos (ej. título menor a 3 caracteres).
+
+- 404 Not Found: El ID de la tarea no existe en el registro.
+
+- 500 Internal Server Error: Fallo crítico en la escritura del archivo de persistencia.
+
+---
+
+### Autor
+Erick Cáceres
