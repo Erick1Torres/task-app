@@ -1,9 +1,7 @@
 require('dotenv').config();
 
-if (!process.env.PORT) {
-    throw new Error ('El puerto El puerto (PORT) no está definido en el archivo .env esta definido')
-}
-
 module.exports = {
-    PORT: process.env.PORT
+    // Si no hay puerto en el .env, usa el 3000 por defecto
+    // En Vercel, esto simplemente se ignorará o se adaptará solo
+    PORT: process.env.PORT || 3000 
 };
