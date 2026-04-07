@@ -13,33 +13,15 @@ const CreaNuevaTarea = (req, res, next) => {
     try {
         const { title, priority, category, dueDate } = req.body;
 
-        // --- VALIDACIÓN EXHAUSTIVA ---
-        // 1. Título obligatorio
-        if (!title || title.trim() === "") {
-            const error = new Error("El título es obligatorio y no puede estar vacío.");
-            error.status = 400;
-            throw error;
-        }
-
-        // 2. Prioridad restringida
-        const prioridadesValidas = ['baja', 'media', 'alta'];
-        if (!prioridadesValidas.includes(priority)) {
-            const error = new Error(`Prioridad no válida. Debe ser: ${prioridadesValidas.join(', ')}`);
-            error.status = 400;
-            throw error;
-        }
-
-        // 3. Categoría obligatoria
-        if (!category || category.trim() === "") {
-            const error = new Error("La categoría es obligatoria para organizar tus tareas.");
-            error.status = 400;
-            throw error;
+        // Si el título no llega, el servidor responde con error 400
+        if (!title) {
+            return res.status(400).json({ error: "El título es obligatorio." });
         }
 
         const nuevaTarea = taskService.crearTarea({ title, priority, category, dueDate });
         res.status(201).json(nuevaTarea);
     } catch (error) {
-        next(error); // Salta al middleware global en index.js
+        next(error);
     }
 };
 
@@ -48,18 +30,16 @@ const EliminarTarea = (req, res, next) => {
         const { id } = req.params;
 
         if (!id || isNaN(id)) {
-            const error = new Error("El ID de la tarea debe ser un número válido.");
-            error.status = 400;
-            throw error;
+            return res.status(400).json({ error: "ID de tarea no válido." });
         }
 
-        taskService.eliminarTarea(id);
-        res.status(204).send(); // 204 significa "No Content", éxito al borrar
+        taskService.eliminarTarea(id); // Corregido: minúscula según el estándar
+        res.status(204).send();
     } catch (error) {
         if (error.message === 'NOT_FOUND') {
-            error.status = 404;
+            return res.status(404).json({ error: "La tarea no existe." });
         }
-        next(error);
+        next(error); 
     }
 };
 
@@ -69,16 +49,14 @@ const actualizarTarea = (req, res, next) => {
         const datos = req.body;
 
         if (!id || isNaN(id)) {
-            const error = new Error("ID de tarea no válido.");
-            error.status = 400;
-            throw error;
+            return res.status(400).json({ error: "ID de tarea no válido." });
         }
 
-        const tareaEditada = taskService.actualizarTarea(id, datos);
+        const tareaEditada = taskService.actualizarTarea(id, datos); 
         res.json(tareaEditada);
     } catch (error) {
         if (error.message === 'NOT_FOUND') {
-            error.status = 404;
+            return res.status(404).json({ error: "No se encontró la tarea." });
         }
         next(error);
     }
