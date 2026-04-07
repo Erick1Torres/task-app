@@ -1,35 +1,43 @@
 const express = require('express');
 const cors = require('cors');
-// Mantenemos el PORT para que funcione en local (VSCode)
-const { PORT } = require('./config/env'); 
+const { PORT } = require('./config/env');
 const taskRouters = require('./routers/task.router');
 
 const app = express();
 
+// Middlewares (Configuraciones de seguridad y datos)
 app.use(cors());
 app.use(express.json());
 
-// Rutas
 app.use('/api/v1/tasks', taskRouters);
 
-// --- MEJORA: Middleware Global de Errores ---
-// Esto captura cualquier 'next(error)' de tus controladores
+// --- MIDDLEWARE GLOBAL DE ERRORES (Mapeo Semántico) ---
 app.use((err, req, res, next) => {
-    const status = err.status || 500;
-    console.error(`[Server Error] ${status}: ${err.message}`);
-    
-    res.status(status).json({
-        error: true,
-        status: status,
-        message: err.message || "Error interno del servidor"
+    //Mapeo semántico de errores conocidos
+    if (err.message === 'NOT_FOUND') {
+        return res.status(404).json({
+            error: "Recurso no encontrado",
+            message: "La tarea solicitada no existe en nuestra base de datos."
+        });
+    }
+
+    //Errores de validación
+    if (err.message.includes("obligatorio") || err.status === 400) {
+        return res.status(400).json({
+            error: "Petición incorrecta",
+            message: err.message
+        });
+    }
+
+    // FALLOS NO CONTROLADOS (Seguridad y Logs)
+    // Registramos la traza completa solo en la consola del servidor
+    console.error("Fallo critico", err); 
+
+    // Devolvemos un 500 genérico sin filtrar detalles técnicos sensibles
+    res.status(500).json({
+        error: "Error interno del servidor",
+        message: "Lo sentimos, algo salió mal de nuestro lado. Inténtalo más tarde."
     });
 });
-
-// Condicional para que no explote en Vercel pero funcione en VSCode
-if (process.env.NODE_ENV !== 'production') {
-    app.listen(PORT || 3000, () => {
-        console.log(`🚀 Servidor local: http://localhost:${PORT || 3000}`);
-    });
-}
 
 module.exports = app;
