@@ -1,5 +1,5 @@
 (() => {
-    // 1. Configuración y Estado
+    // 1. Configuración y Estado Global
     const STORAGE_KEYS = {
         TASKS: 'taskflow_tasks',
         COLOR: 'taskflow_color',
@@ -17,7 +17,7 @@
     let currentFilter = 'all';
     let searchQuery = ''; 
 
-    // 2. Motor de Color Dinámico
+    // 2. Motor de Personalización (Color Dinámico)
     function applyThemeColor(hex) {
         userColor = hex;
         localStorage.setItem(STORAGE_KEYS.COLOR, hex);
@@ -30,194 +30,214 @@
 
         let styleTag = document.getElementById('dynamic-brand-styles') || document.createElement('style');
         styleTag.id = 'dynamic-brand-styles';
-        if (!styleTag.parentNode) document.head.appendChild(styleTag);
-
         styleTag.innerHTML = `
-            :root { --brand-primary: ${hex}; }
-            header, #main-header { background-color: ${hex} !important; }
-            #color-preview { background-color: ${hex} !important; }
-            #add-btn, button[type="submit"] { background-color: ${hex} !important; }
+            :root { --brand-color: ${hex}; }
             .active-filter { background-color: ${hex} !important; color: white !important; }
-            .task-check:checked { background-color: ${hex} !important; border-color: ${hex} !important; }
-            input:focus { border-color: ${hex} !important; }
+            .task-checkbox:checked { background-color: ${hex} !important; border-color: ${hex} !important; }
+            .accent-color { color: ${hex} !important; }
         `;
+        if (!styleTag.parentNode) document.head.appendChild(styleTag);
     }
 
-    // 3. Gestión de estados de red
+    // 3. Sincronización con la API (PUNTO EXTRA: Estado de Carga)
     async function syncTasks() {
-        const list = document.getElementById('task-list');
-        list.classList.add('opacity-40', 'pointer-events-none', 'transition-opacity');
-
+        const listContainer = document.getElementById('task-list');
+        const emptyState = document.getElementById('empty-state');
+        
         try {
-            if (typeof taskApi !== 'undefined') {
-                tasks = await taskApi.getAll();
-                renderTaskList();
-            }
-        } catch (e) {
-            console.error("Error de conexión:", e);
-            showNetworkStatus("Sin conexión - Modo Local", "bg-orange-500");
-            tasks = JSON.parse(localStorage.getItem(STORAGE_KEYS.TASKS)) || [];
+            // Mostrar Spinner de carga antes de la petición
+            emptyState.classList.add('hidden');
+            listContainer.innerHTML = `
+                <div id="loading-spinner" class="flex flex-col items-center justify-center py-20 animate-pulse">
+                    <div class="w-12 h-12 border-4 border-slate-200 border-t-indigo-500 rounded-full animate-spin mb-4"></div>
+                    <p class="text-slate-500 font-medium italic">Sincronizando con Vercel...</p>
+                </div>
+            `;
+
+            // Llamada asíncrona a la API
+            const fetchedTasks = await taskApi.getAll();
+            tasks = fetchedTasks;
+            
+            // Dibujar la lista con los datos reales
             renderTaskList();
-        } finally {
-            list.classList.remove('opacity-40', 'pointer-events-none');
+        } catch (error) {
+            console.error("Error de comunicación con la API:", error);
+            listContainer.innerHTML = `
+                <div class="text-center py-12 px-6 bg-red-50 dark:bg-red-900/10 rounded-3xl border border-red-200 dark:border-red-800/30">
+                    <i data-lucide="wifi-off" class="w-12 h-12 mx-auto text-red-400 mb-4"></i>
+                    <p class="text-red-600 font-bold">Sin conexión con el servidor</p>
+                    <p class="text-red-500/70 text-sm mt-2">No se pudo cargar la información. Verifica tu despliegue en Vercel.</p>
+                    <button onclick="window.location.reload()" class="mt-4 text-xs underline uppercase tracking-widest font-bold text-red-600">Reintentar</button>
+                </div>
+            `;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         }
     }
 
-    function showNetworkStatus(msg, colorClass) {
-        const status = document.createElement('div');
-        status.className = `fixed bottom-6 right-6 ${colorClass} text-white px-6 py-3 rounded-2xl shadow-2xl z-50 font-bold animate-bounce text-sm`;
-        status.innerHTML = `<span>${msg}</span>`;
-        document.body.appendChild(status);
-        setTimeout(() => status.remove(), 4000);
-    }
-
-    // 4. Renderizado (CON LÓGICA DE FECHA SIN LÍMITE)
+    // 4. Renderizado de la Interfaz
     function renderTaskList() {
         const list = document.getElementById('task-list');
         const emptyState = document.getElementById('empty-state');
-        if (!list) return;
-
-        const filtered = tasks.filter(t => {
-            const matchesFilter = currentFilter === 'all' || t.category === currentFilter;
-            const matchesSearch = (t.title || "").toLowerCase().includes(searchQuery.toLowerCase());
+        
+        // Filtrado lógico
+        const filteredTasks = tasks.filter(t => {
+            const matchesFilter = currentFilter === 'all' || 
+                                 (currentFilter === 'active' && !t.completed) || 
+                                 (currentFilter === 'completed' && t.completed);
+            const matchesSearch = t.title.toLowerCase().includes(searchQuery.toLowerCase());
             return matchesFilter && matchesSearch;
         });
-        
+
         list.innerHTML = '';
-        if (emptyState) emptyState.classList.toggle('hidden', filtered.length > 0);
-
-        filtered.sort((a, b) => b.id - a.id).forEach(task => {
-            const priorityData = PRIORITY_MAP[task.priority] || PRIORITY_MAP.media;
-            const taskEl = document.createElement('div');
-            taskEl.dataset.id = task.id;
-            taskEl.className = `flex items-center justify-between p-5 rounded-[2rem] border-l-4 transition-all shadow-sm mb-4 ${priorityData.class} ${task.completed ? 'opacity-50' : ''}`;
-            
-            // Lógica Senior: Validar fecha vacía
-            const dateDisplay = task.dueDate && task.dueDate !== "" 
-                ? ` • ${task.dueDate}` 
-                : " • Sin límite";
-
-            taskEl.innerHTML = `
-                <div class="flex items-center gap-4 pointer-events-none">
-                    <input type="checkbox" ${task.completed ? 'checked' : ''} class="task-check pointer-events-auto w-5 h-5 cursor-pointer appearance-none border-2 rounded-full transition-all">
-                    <div>
-                        <h3 class="task-title-display font-bold text-slate-800 dark:text-slate-100 ${task.completed ? 'line-through text-slate-400' : ''}"></h3>
-                        <p class="text-[10px] text-slate-500 uppercase font-black">${task.category} • ${priorityData.label}${dateDisplay}</p>
+        
+        if (filteredTasks.length === 0) {
+            emptyState.classList.remove('hidden');
+        } else {
+            emptyState.classList.add('hidden');
+            filteredTasks.forEach(task => {
+                const priority = PRIORITY_MAP[task.priority] || PRIORITY_MAP.baja;
+                const card = document.createElement('div');
+                card.className = `group flex items-center gap-4 p-5 rounded-3xl border-l-8 shadow-sm transition-all hover:shadow-md hover:-translate-y-1 ${priority.class} ${task.completed ? 'opacity-60 grayscale-[0.5]' : ''}`;
+                
+                card.innerHTML = `
+                    <div class="relative flex items-center justify-center">
+                        <input type="checkbox" ${task.completed ? 'checked' : ''} 
+                               class="task-checkbox w-7 h-7 rounded-full border-2 border-slate-300 appearance-none cursor-pointer transition-all checked:scale-110">
+                        ${task.completed ? '<i data-lucide="check" class="absolute text-white w-4 h-4 pointer-events-none"></i>' : ''}
                     </div>
-                </div>
-                <button class="delete-btn text-slate-400 hover:text-red-500 p-2 transition-colors">
-                    <i data-lucide="trash-2" class="w-5 h-5"></i>
-                </button>
-            `;
-            taskEl.querySelector('.task-title-display').textContent = task.title;
-            list.appendChild(taskEl);
-        });
+                    <div class="flex-1 min-w-0">
+                        <h3 class="font-bold text-slate-800 dark:text-white truncate text-lg ${task.completed ? 'line-through decoration-2' : ''}">${task.title}</h3>
+                        <div class="flex items-center gap-3 mt-1">
+                            <span class="text-[10px] font-black uppercase tracking-tighter px-2 py-0.5 rounded-lg bg-white/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 border border-slate-200/50 dark:border-slate-700/50">${task.category}</span>
+                            ${task.dueDate ? `<span class="text-xs text-slate-500 flex items-center gap-1 font-medium"><i data-lucide="calendar" class="w-3 h-3"></i> ${task.dueDate}</span>` : ''}
+                        </div>
+                    </div>
+                    <button class="delete-btn opacity-0 group-hover:opacity-100 p-2.5 bg-white dark:bg-slate-800 rounded-2xl text-slate-400 hover:text-red-500 hover:shadow-lg transition-all transform hover:scale-110">
+                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                    </button>
+                `;
 
-        if (typeof lucide !== 'undefined') lucide.createIcons();
+                // Evento: Cambiar estado Completado
+                card.querySelector('.task-checkbox').onchange = async () => {
+                    try {
+                        await taskApi.update(task.id, { completed: !task.completed });
+                        await syncTasks();
+                    } catch (err) {
+                        alert("Error al actualizar la tarea");
+                    }
+                };
+
+                // Evento: Eliminar
+                card.querySelector('.delete-btn').onclick = async () => {
+                    card.classList.add('scale-90', 'opacity-0', 'blur-sm');
+                    setTimeout(async () => {
+                        try {
+                            await taskApi.delete(task.id);
+                            await syncTasks();
+                        } catch (err) {
+                            alert("No se pudo eliminar la tarea");
+                            await syncTasks();
+                        }
+                    }, 300);
+                };
+
+                list.appendChild(card);
+            });
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
     }
 
-    // 5. Inicialización y Eventos
+    // 5. Inicialización de Eventos
     function init() {
         const form = document.getElementById('task-form');
-        const taskInput = document.getElementById('task-input');
-        const addBtn = document.getElementById('add-btn');
-
-        form?.addEventListener('submit', async (e) => {
+        
+        // Formulario de creación
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const title = taskInput.value.trim();
+            const titleInput = document.getElementById('task-input');
+            const priorityInput = document.getElementById('priority-select');
+            const categoryInput = document.getElementById('category-select');
+            const dateInput = document.getElementById('date-input');
 
-            if (title.length < 3) {
-                const msg = title.length === 0 ? "El título es obligatorio" : "Mínimo 3 caracteres";
-                taskInput.classList.add('border-red-500', 'animate-shake');
-                const prevPlaceholder = taskInput.placeholder;
-                taskInput.placeholder = msg;
-                taskInput.value = '';
-                setTimeout(() => {
-                    taskInput.classList.remove('border-red-500', 'animate-shake');
-                    taskInput.placeholder = prevPlaceholder;
-                }, 2000);
-                return;
-            }
+            if (!titleInput.value.trim()) return;
 
-            const originalHTML = addBtn.innerHTML;
-            addBtn.innerHTML = `<i data-lucide="loader-2" class="w-6 h-6 animate-spin"></i>`;
-            addBtn.disabled = true;
-            if (typeof lucide !== 'undefined') lucide.createIcons();
+            const newTask = {
+                title: titleInput.value,
+                priority: priorityInput.value,
+                category: categoryInput.value,
+                dueDate: dateInput.value
+            };
 
             try {
-                await taskApi.create({
-                    title: title,
-                    category: document.getElementById('task-category-select').value,
-                    priority: document.getElementById('task-priority-select').value,
-                    dueDate: document.getElementById('task-date-input').value
-                });
+                // Desactivar botón mientras se crea
+                const btn = form.querySelector('button[type="submit"]');
+                btn.disabled = true;
+                btn.classList.add('opacity-50');
+
+                await taskApi.create(newTask);
                 
-                taskInput.value = '';
-                document.getElementById('task-date-input').value = '';
+                titleInput.value = '';
+                dateInput.value = '';
+                btn.disabled = false;
+                btn.classList.remove('opacity-50');
+                
                 await syncTasks();
-                showNetworkStatus("Tarea sincronizada", "bg-green-600");
             } catch (err) {
-                showNetworkStatus("Error al guardar en servidor", "bg-red-600");
-            } finally {
-                addBtn.innerHTML = originalHTML;
-                addBtn.disabled = false;
-                if (typeof lucide !== 'undefined') lucide.createIcons();
+                form.classList.add('animate-shake');
+                setTimeout(() => form.classList.remove('animate-shake'), 400);
             }
         });
 
-        document.getElementById('search-input')?.addEventListener('input', (e) => {
+        // Buscador en tiempo real
+        document.getElementById('search-input').addEventListener('input', (e) => {
             searchQuery = e.target.value;
             renderTaskList();
         });
 
-        document.getElementById('task-list')?.addEventListener('click', async (e) => {
-            const taskEl = e.target.closest('[data-id]');
-            if (!taskEl) return;
-            const id = taskEl.dataset.id;
-
-            if (e.target.closest('.delete-btn')) {
-                await taskApi.delete(id);
-                await syncTasks();
-            }
-
-            if (e.target.classList.contains('task-check')) {
-                await taskApi.update(id, { completed: e.target.checked });
-                await syncTasks();
-            }
-        });
-
-        document.querySelectorAll('.barra-lateral li').forEach(li => {
-            li.addEventListener('click', function() {
-                document.querySelectorAll('.barra-lateral li').forEach(l => {
-                    l.className = "filter-btn flex items-center gap-3 cursor-pointer p-3.5 rounded-2xl text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 transition-all";
+        // Filtros de navegación
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(b => {
+                    b.classList.remove('active-filter', 'font-bold', 'shadow-lg', 'text-white');
+                    b.classList.add('text-slate-500', 'dark:text-slate-400');
                 });
-                this.className = "filter-btn flex items-center gap-3 cursor-pointer p-3.5 rounded-2xl text-white font-bold shadow-lg active-filter transition-all";
+                this.classList.add('active-filter', 'font-bold', 'shadow-lg', 'text-white');
+                this.classList.remove('text-slate-500', 'dark:text-slate-400');
+                
                 currentFilter = this.dataset.filter || 'all';
                 renderTaskList();
             });
         });
 
+        // Selector de color personalizado
         document.getElementById('custom-color-picker')?.addEventListener('input', (e) => {
             applyThemeColor(e.target.value);
         });
 
+        // Toggle Modo Oscuro
         document.getElementById('theme-toggle')?.addEventListener('click', () => {
             const isDark = document.documentElement.classList.toggle('dark');
             localStorage.setItem(STORAGE_KEYS.THEME, isDark ? 'dark' : 'light');
+            
             const themeIcon = document.getElementById('theme-icon');
-            if (themeIcon) themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
-            if (typeof lucide !== 'undefined') lucide.createIcons();
+            if (themeIcon) {
+                themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
         });
     }
 
+    // 6. Arranque de la Aplicación
     document.addEventListener('DOMContentLoaded', () => {
+        // Cargar Preferencias
         const isDark = localStorage.getItem(STORAGE_KEYS.THEME) === 'dark';
         document.documentElement.classList.toggle('dark', isDark);
+        
         const themeIcon = document.getElementById('theme-icon');
         if (themeIcon) themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
 
         applyThemeColor(userColor);
         init();
-        syncTasks();
+        syncTasks(); // Carga inicial desde la API
     });
 })();
